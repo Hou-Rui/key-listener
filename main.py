@@ -10,8 +10,29 @@ from main_ui import Ui_MainWindow
 
 
 class Preset:
-    def __init__(self, path: str):
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.pressed: dict[str, str] = {}
+        self.released: dict[str, str] = {}
+
+
+class PresetManager:
+    def __init__(self, path: str) -> None:
         self.path = path
+        self.presets = self.initPresets()
+        self.current = self.presets[0]
+
+    def initPresets(self) -> list[Preset]:
+        result: list[Preset] = []
+        with open(self.path) as config_file:
+            data = yaml.safe_load(config_file)
+            for p in data:
+                preset = Preset(name=p['name'])
+                if 'pressed' in p:
+                    for key, cmd in p['pressed'].items():
+                        preset.pressed[key] = cmd
+                result.append(preset)
+        return result
 
 
 class MainWindow(QMainWindow):
@@ -19,7 +40,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.preset = Preset("preset.yml")
+        self.presetManager = PresetManager("preset.yml")
         self.initWindow()
 
     def initWindow(self) -> None:
@@ -28,16 +49,9 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
         keyText = QKeySequence(key).toString()
+        cmd = self.presetManager.current.pressed[keyText]
+        Popen(cmd.split(' '))
         self.ui.statusBar.showMessage(f"Event: {keyText}")
-        match key:
-            case Qt.Key.Key_Left:
-                Popen(["adb", "shell", "input", "swipe", "960", "540", "800", "540", "200"])
-            case Qt.Key.Key_Right:
-                Popen(["adb", "shell", "input", "swipe", "800", "540", "960", "540", "200"])
-            case Qt.Key.Key_Up:
-                Popen(["adb", "shell", "input", "swipe", "960", "540", "960", "400", "200"])
-            case Qt.Key.Key_Down:
-                Popen(["adb", "shell", "input", "swipe", "960", "400", "960", "540", "200"])
         return super().keyPressEvent(event)
 
 

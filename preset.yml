@@ -1,6 +1,5 @@
 ---
-name: Subway Surfers
-keys:
+- name: Subway Surfers
   pressed:
     Left: adb shell input swipe 960 540 800 540 200
     Right: adb shell input swipe 800 540 960 540 200
