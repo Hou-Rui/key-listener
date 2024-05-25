@@ -1,7 +1,15 @@
 ---
 - name: Subway Surfers
   pressed:
-    Left: adb shell input swipe 960 540 800 540 200
-    Right: adb shell input swipe 800 540 960 540 200
-    Up: adb shell input swipe 960 540 960 400 200
-    Down: adb shell input swipe 960 400 960 540 200
+    - key: Left
+      desc: Swipe left from center
+      cmd: adb shell input swipe 960 540 800 540 100
+    - key: Right
+      desc: Swipe right from center
+      cmd: adb shell input swipe 800 540 960 540 100
+    - key: Up
+      desc: Swipe up from center
+      cmd: adb shell input swipe 960 540 960 400 100
+    - key: Down
+      desc: Swipe down from center
+      cmd: adb shell input swipe 960 400 960 540 100
