@@ -22,7 +22,7 @@ def main():
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    if not os.environ.get("QT_QUICK_CONTROLS_STYLE"):
+    if "QT_QUICK_CONTROLS_STYLE" not in os.environ:
         os.environ["QT_QUICK_CONTROLS_STYLE"] = "org.kde.desktop"
 
     engine.load(Path(__file__).parent / "main.qml")

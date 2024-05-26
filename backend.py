@@ -45,9 +45,7 @@ class Backend(QObject):
     def processKey(self, key: int):
         keyText = QKeySequence(key).toString()
         print(f"{keyText} is pressed!")
-        cmd = self.getCommand(keyText)
-        if not cmd:
-            return
-        print(f"Executing {cmd}...")
-        Popen(cmd.split(" "))
-        self.messageEmitted.emit(f"Event: {keyText} pressed")
+        if cmd := self.getCommand(keyText):
+            print(f"Executing {cmd}...")
+            Popen(cmd.split(" "))
+            self.messageEmitted.emit(f"Event: {keyText} pressed")
