@@ -18,7 +18,6 @@ class PresetManager:
     def initPresets(self) -> list[dict]:
         with open(self.path) as config_file:
             return yaml.safe_load(config_file)
-            
 
 
 @QmlElement
@@ -32,16 +31,15 @@ class Backend(QObject):
     @Slot(result=list)
     def getPresets(self) -> list[dict]:
         return self.presetManager.presets
-    
+
     @Slot(result=dict)
     def getCurrentPreset(self) -> dict:
         return self.presetManager.current
-    
-    def getCommand(self, keyText: str) -> str | None:
-        for p in self.presetManager.current['pressed']:
-            if p['key'] == keyText:
-                return p['cmd']
 
+    def getCommand(self, keyText: str) -> str | None:
+        for p in self.presetManager.current["pressed"]:
+            if p["key"] == keyText:
+                return p["cmd"]
 
     @Slot(int)
     def processKey(self, key: int):

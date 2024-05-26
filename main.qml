@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts as Layouts
+import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
@@ -9,23 +9,40 @@ import "./backend/Backend"
 
 Kirigami.ApplicationWindow {
     id: root
+    visible: true
     title: qsTr("Key Listener")
 
-    pageStack.defaultColumnWidth: 200
-    pageStack.initialPage: [presetsComponent, listenersComponent]
+    readonly property int columnWidth: 180
+    readonly property int rowItemHeight: 32
+    readonly property int gapSmall: 4
+    readonly property int gapMedium: 8
+    readonly property int gapLarge: 12
 
-    Component {
-        id: presetsComponent
+    pageStack.defaultColumnWidth: columnWidth
+    wideScreen: width >= 3 * columnWidth
+    minimumWidth: 2 * columnWidth
 
-        Kirigami.ScrollablePage {
-            title: qsTr("Presets")
-            topPadding: 0
-            bottomPadding: 0
-            leftPadding: 0
-            rightPadding: 0
+    width: 550
+    height: 400
+
+    globalDrawer: Kirigami.GlobalDrawer {
+        id: presetsDrawer
+        modal: true
+        width: root.columnWidth
+
+        contentItem: ColumnLayout {
+            Layout.margins: 12
+
+            Kirigami.Heading {
+                text: "Presets"
+                level: 2
+            }
 
             ListView {
                 id: presetListView
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+
                 reuseItems: true
                 model: backend.getPresets()
 
@@ -33,9 +50,10 @@ Kirigami.ApplicationWindow {
                     required property string name
                     required property int index
 
-                    height: 32
+                    height: root.rowItemHeight
                     width: presetListView.width
                     text: name
+                    padding: root.gapSmall
 
                     highlighted: ListView.isCurrentItem
                     onClicked: presetListView.currentIndex = index
@@ -44,83 +62,84 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    Component {
-        id: listenersComponent
+    pageStack.initialPage: Kirigami.Page {
+        title: qsTr("Key Listener")
+        padding: 0
 
-        Kirigami.Page {
-            title: qsTr("Key Listener")
-            padding: 0
+        actions: [
+            Kirigami.Action {
+                id: actionAddListener
+                icon.name: "list-add"
+                text: qsTr("Add Listener")
+            },
+            Kirigami.Action {
+                id: actionRemoveListener
+                icon.name: "list-remove"
+                text: qsTr("Remove Listener")
+            }
+        ]
 
-            actions: [
-                Kirigami.Action {
-                    id: actionAddListener
-                    icon.name: "list-add"
-                    text: qsTr("Add Listener")
-                },
-                Kirigami.Action {
-                    id: actionRemoveListener
-                    icon.name: "list-remove"
-                    text: qsTr("Remove Listener")
+        RowLayout {
+            anchors.fill: parent
+            spacing: 0
+            focus: true
+
+            Keys.onPressed: event => {
+                if (!event.isAutoRepeat) {
+                    backend.processKey(event.key);
                 }
-            ]
+            }
 
-            Layouts.RowLayout {
-                anchors.fill: parent
-                spacing: 0
-                focus: true
+            Controls.ScrollView {
+                Layout.fillHeight: true
+                Layout.preferredWidth: root.columnWidth
+                Layout.topMargin: root.gapSmall
+                Layout.bottomMargin: root.gapSmall
+                clip: true
 
-                Keys.onPressed: event => {
-                    if (!event.isAutoRepeat) {
-                        backend.processKey(event.key);
+                ListView {
+                    id: listenerListView
+                    reuseItems: true
+                    model: backend.getCurrentPreset().pressed
+
+                    onCurrentIndexChanged: {
+                        const listener = model[listenerListView.currentIndex];
+                        cmdTextField.text = listener.cmd;
+                        keyTextField.text = listener.key;
+                        descTextField.text = listener.desc;
+                    }
+
+                    delegate: Controls.ItemDelegate {
+                        required property string key
+                        required property string cmd
+                        required property string desc
+                        required property int index
+
+                        text: desc
+                        width: listenerListView.width
+                        height: root.rowItemHeight
+                        highlighted: ListView.isCurrentItem
+                        onClicked: listenerListView.currentIndex = index
                     }
                 }
+            }
 
-                Controls.ScrollView {
-                    Layouts.Layout.fillHeight: true
-                    implicitWidth: 180
-                    clip: true
+            Kirigami.Separator {
+                Layout.fillHeight: true
+            }
 
-                    ListView {
-                        id: listenerListView
-                        reuseItems: true
-                        model: backend.getCurrentPreset().pressed
-
-                        onCurrentIndexChanged: {
-                            const listener = model[listenerListView.currentIndex];
-                            cmdTextField.text = listener.cmd;
-                            keyTextField.text = listener.key;
-                            descTextField.text = listener.desc;
-                        }
-
-                        delegate: Controls.ItemDelegate {
-                            required property string key
-                            required property string cmd
-                            required property string desc
-                            required property int index
-
-                            text: "listen " + key
-                            width: listenerListView.width
-                            height: 32
-                            highlighted: ListView.isCurrentItem
-                            onClicked: listenerListView.currentIndex = index
-                        }
-                    }
-                }
-
-                Kirigami.Separator {
-                    Layouts.Layout.fillHeight: true
-                }
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
 
                 Kirigami.FormLayout {
-                    Layouts.Layout.fillHeight: true
-                    Layouts.Layout.leftMargin: 12
-                    Layouts.Layout.rightMargin: 12
-                    Layouts.Layout.topMargin: 4
-                    Layouts.Layout.bottomMargin: 4
+                    Layout.fillHeight: true
+                    Layout.leftMargin: root.gapMedium
+                    Layout.rightMargin: root.gapMedium
 
                     Controls.TextField {
                         id: descTextField
-                        Kirigami.FormData.label: qsTr("Description")
+                        Kirigami.FormData.label: qsTr("Description:")
                     }
 
                     Controls.TextField {
@@ -130,7 +149,28 @@ Kirigami.ApplicationWindow {
 
                     Controls.TextField {
                         id: cmdTextField
+                        wrapMode: TextEdit.WordWrap
                         Kirigami.FormData.label: qsTr("Execute Command:")
+                    }
+                }
+
+                Kirigami.Separator {
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                    Layout.rightMargin: root.gapSmall
+                    Layout.bottomMargin: root.gapSmall
+
+                    Controls.Button {
+                        text: qsTr("Reset")
+                        icon.name: "document-cleanup"
+                    }
+
+                    Controls.Button {
+                        text: qsTr("Apply")
+                        icon.name: "dialog-apply"
                     }
                 }
             }

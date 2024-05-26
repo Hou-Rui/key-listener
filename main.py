@@ -3,13 +3,14 @@
 import os
 import signal
 import sys
-
 from pathlib import Path
 
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from backend import Backend
+
+assert Backend is not None
 
 
 def main():
