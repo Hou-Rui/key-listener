@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
-import "./backend/Backend"
+import backend.Backend
 
 Kirigami.ApplicationWindow {
     id: root
@@ -34,7 +34,7 @@ Kirigami.ApplicationWindow {
             Layout.margins: 12
 
             Kirigami.Heading {
-                text: "Presets"
+                text: qsTr("Presets")
                 level: 2
             }
 
@@ -71,13 +71,26 @@ Kirigami.ApplicationWindow {
                 id: actionAddListener
                 icon.name: "list-add"
                 text: qsTr("Add Listener")
+                // onTriggered: addListenerDialog.visible = true
             },
             Kirigami.Action {
                 id: actionRemoveListener
                 icon.name: "list-remove"
                 text: qsTr("Remove Listener")
+                onTriggered: removeListenerDialog.visible = true
             }
         ]
+
+        Kirigami.PromptDialog {
+            id: removeListenerDialog
+            title: "Confirm Removal?"
+            subtitle: {
+                const listener = listenerListView.getCurrentListener();
+                return qsTr(`The listener "${listener.desc}" will be removed.`);
+            }
+            standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
+            // onAccepted: document.save()
+        }
 
         RowLayout {
             anchors.fill: parent
@@ -102,8 +115,12 @@ Kirigami.ApplicationWindow {
                     reuseItems: true
                     model: backend.getCurrentPreset().pressed
 
+                    function getCurrentListener() {
+                        return model[currentIndex];
+                    }
+
                     onCurrentIndexChanged: {
-                        const listener = model[listenerListView.currentIndex];
+                        const listener = getCurrentListener();
                         cmdTextField.text = listener.cmd;
                         keyTextField.text = listener.key;
                         descTextField.text = listener.desc;

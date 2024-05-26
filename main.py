@@ -15,6 +15,9 @@ assert Backend is not None
 
 def main():
     app = QGuiApplication(sys.argv)
+    app.setApplicationName("KeyListener")
+    app.setApplicationDisplayName("Key Listener")
+
     engine = QQmlApplicationEngine()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
