@@ -11,11 +11,6 @@ Kirigami.ApplicationWindow {
     id: root
     visible: true
     title: qsTr("Key Listener")
-    onActiveChanged: {
-        if (!root.active) {
-            requestActivate();
-        }
-    }
 
     readonly property int columnWidth: 180
     readonly property int rowItemHeight: 32
@@ -208,6 +203,24 @@ Kirigami.ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    Kirigami.PromptDialog {
+        id: confirmCloseDialog
+        title: "Exit Key Listener?"
+        subtitle: "All current listeners will be stopped."
+        standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
+        onAccepted: {
+            eventListener.stop();
+            Qt.quit();
+        }
+    }
+
+    onClosing: close => {
+        if (eventListener.isRunning) {
+            close.accepted = false;
+            confirmCloseDialog.visible = true;
         }
     }
 
