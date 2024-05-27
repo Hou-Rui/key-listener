@@ -1,5 +1,7 @@
+import os
 from subprocess import Popen
 
+import evdev
 import yaml
 from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtGui import QKeySequence
@@ -18,6 +20,27 @@ class PresetManager:
     def initPresets(self) -> list[dict]:
         with open(self.path) as config_file:
             return yaml.safe_load(config_file)
+
+
+class EventDeviceManager:
+    EVDEV_PATH = '/dev/input'
+
+    def __init__(self):
+        self.devices = self.initDevices()
+
+    def initDevices(self) -> evdev.InputDevice:
+        result = []
+        for p in os.listdir(self.EVDEV_PATH):
+            path = os.path.join(self.EVDEV_PATH, p)
+            if not path.startswith('event'):
+                continue
+            device = evdev.InputDevice(path)
+            caps = device.capabilities()
+            if keys := caps.get(evdev.ecodes.EV_KEY):
+                if evdev.ecodes.KEY_ENTER in keys:
+                    result.append(device)
+        return result
+
 
 
 @QmlElement
