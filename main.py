@@ -8,9 +8,11 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-from backend import Backend
+from PresetManager import PresetManager
+from EventListener import EventListener
 
-assert Backend is not None
+assert PresetManager is not None
+assert EventListener is not None
 
 
 def main():

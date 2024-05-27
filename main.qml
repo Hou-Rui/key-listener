@@ -5,12 +5,17 @@ import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
-import backend.Backend
+import keylistener.backend as Backend
 
 Kirigami.ApplicationWindow {
     id: root
     visible: true
     title: qsTr("Key Listener")
+    onActiveChanged: {
+        if (!root.active) {
+            requestActivate();
+        }
+    }
 
     readonly property int columnWidth: 180
     readonly property int rowItemHeight: 32
@@ -44,7 +49,7 @@ Kirigami.ApplicationWindow {
                 Layout.fillWidth: true
 
                 reuseItems: true
-                model: backend.getPresets()
+                model: presetManager.getPresets()
 
                 delegate: Controls.ItemDelegate {
                     required property string name
@@ -68,15 +73,34 @@ Kirigami.ApplicationWindow {
 
         actions: [
             Kirigami.Action {
+                id: actionStartListener
+                icon.name: "media-playback-start"
+                text: qsTr("Start")
+                visible: !eventListener.isRunning
+                displayHint: Kirigami.DisplayHint.KeepVisible
+                onTriggered: {
+                    const keys = presetManager.getCurrentListenedKeys();
+                    eventListener.start(keys);
+                }
+            },
+            Kirigami.Action {
+                id: actionStopListener
+                icon.name: "media-playback-stop"
+                text: qsTr("Stop")
+                visible: eventListener.isRunning
+                displayHint: Kirigami.DisplayHint.KeepVisible
+                onTriggered: eventListener.stop()
+            },
+            Kirigami.Action {
                 id: actionAddListener
                 icon.name: "list-add"
-                text: qsTr("Add Listener")
+                text: qsTr("Add")
                 // onTriggered: addListenerDialog.visible = true
             },
             Kirigami.Action {
                 id: actionRemoveListener
                 icon.name: "list-remove"
-                text: qsTr("Remove Listener")
+                text: qsTr("Remove")
                 onTriggered: removeListenerDialog.visible = true
             }
         ]
@@ -95,13 +119,6 @@ Kirigami.ApplicationWindow {
         RowLayout {
             anchors.fill: parent
             spacing: 0
-            focus: true
-
-            Keys.onPressed: event => {
-                if (!event.isAutoRepeat) {
-                    backend.processKey(event.key);
-                }
-            }
 
             Controls.ScrollView {
                 Layout.fillHeight: true
@@ -113,7 +130,7 @@ Kirigami.ApplicationWindow {
                 ListView {
                     id: listenerListView
                     reuseItems: true
-                    model: backend.getCurrentPreset().pressed
+                    model: presetManager.getCurrentPreset().pressed
 
                     function getCurrentListener() {
                         return model[currentIndex];
@@ -194,10 +211,15 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    Backend {
-        id: backend
-        onMessageEmitted: message => {
-            root.showPassiveNotification(message);
+    Backend.PresetManager {
+        id: presetManager
+    }
+
+    Backend.EventListener {
+        id: eventListener
+        onKeyPressed: key => {
+            root.showPassiveNotification(`${key} is pressed!`);
+            presetManager.execKeyPressCommand(key);
         }
     }
 }
