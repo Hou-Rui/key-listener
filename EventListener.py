@@ -1,8 +1,10 @@
+import asyncio
 import os
 
 import evdev
-from PySide6.QtCore import Property, QObject, QThread, Signal, Slot
+from PySide6.QtCore import Property, QCoreApplication, QObject, Signal, Slot
 from PySide6.QtQml import QmlElement
+from qasync import QEventLoop
 
 QML_IMPORT_NAME = "keylistener.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -10,32 +12,6 @@ QML_IMPORT_MAJOR_VERSION = 1
 EV_KEY = evdev.ecodes.ecodes["EV_KEY"]
 KEY_ENTER = evdev.ecodes.ecodes["KEY_ENTER"]
 EVDEV_PATH = "/dev/input"
-
-
-class EventListenerWorker(QThread):
-    class Signals(QObject):
-        keyPressed = Signal(str)
-        keyReleased = Signal(str)
-
-    def __init__(self, device: evdev.InputDevice, keys: list[str],
-                 parent: QObject | None = None):
-        super().__init__(parent)
-        self.signals = self.Signals()
-        self.device = device
-        self.keys = keys
-
-    def run(self):
-        for event in self.device.read_loop():
-            if event.type != EV_KEY:
-                continue
-            keyEvent = evdev.KeyEvent(event)
-            if keyEvent.keycode not in self.keys:
-                continue
-            match keyEvent.keystate:
-                case evdev.KeyEvent.key_down:
-                    self.signals.keyPressed.emit(keyEvent.keycode)
-                case evdev.KeyEvent.key_up:
-                    self.signals.keyReleased.emit(keyEvent.keycode)
 
 
 @QmlElement
@@ -47,7 +23,8 @@ class EventListener(QObject):
     def __init__(self):
         super().__init__()
         self.devices = self.initDevices()
-        self.workers: set[EventListenerWorker] = set()
+        self.loop = self.initLoop()
+        self.tasks: set[asyncio.Task] = set()
 
     def isDeviceKeyboard(self, device: evdev.InputDevice) -> bool:
         caps = device.capabilities()
@@ -66,23 +43,40 @@ class EventListener(QObject):
                 result.append(device)
         return result
 
+    def initLoop(self):
+        if app := QCoreApplication.instance():
+            loop = QEventLoop(app)
+            asyncio.set_event_loop(loop)
+            return loop
+        raise RuntimeError("QCoreApplication no instance")
+
+    async def listenAsync(self, device: evdev.InputDevice, keys: list[str]):
+        async for event in device.async_read_loop():
+            if event.type != EV_KEY:
+                continue
+            keyEvent = evdev.KeyEvent(event)
+            if keyEvent.keycode not in keys:
+                continue
+            match keyEvent.keystate:
+                case evdev.KeyEvent.key_down:
+                    self.keyPressed.emit(keyEvent.keycode)
+                case evdev.KeyEvent.key_up:
+                    self.keyReleased.emit(keyEvent.keycode)
+
     @Property(bool, notify=runningChanged)  # type: ignore
     def isRunning(self) -> bool:
-        return len(self.workers) > 0
+        return len(self.tasks) > 0
 
     @Slot(list)
     def start(self, keys: list[str]):
         for device in self.devices:
-            worker = EventListenerWorker(device, keys, parent=self)
-            worker.signals.keyPressed.connect(self.keyPressed.emit)
-            worker.signals.keyReleased.connect(self.keyReleased.emit)
-            self.workers.add(worker)
-            worker.start()
-            self.runningChanged.emit()
+            task = asyncio.ensure_future(self.listenAsync(device, keys))
+            self.tasks.add(task)
+        self.runningChanged.emit()
 
     @Slot()
     def stop(self):
-        for worker in self.workers:
-            worker.terminate()
-        self.workers.clear()
+        for task in self.tasks:
+            task.cancel()
+        self.tasks.clear()
         self.runningChanged.emit()
