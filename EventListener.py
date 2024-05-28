@@ -73,7 +73,7 @@ class EventListener(QObject):
     @Slot(list)
     def start(self, keys: list[str]):
         for device in self.devices:
-            worker = EventListenerWorker(device, keys)
+            worker = EventListenerWorker(device, keys, parent=self)
             worker.signals.keyPressed.connect(self.keyPressed.emit)
             worker.signals.keyReleased.connect(self.keyReleased.emit)
             self.workers.add(worker)
