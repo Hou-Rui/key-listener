@@ -17,8 +17,9 @@ class EventListenerWorker(QThread):
         keyPressed = Signal(str)
         keyReleased = Signal(str)
 
-    def __init__(self, device: evdev.InputDevice, keys: list[str]):
-        super().__init__()
+    def __init__(self, device: evdev.InputDevice, keys: list[str],
+                 parent: QObject | None = None):
+        super().__init__(parent)
         self.signals = self.Signals()
         self.device = device
         self.keys = keys

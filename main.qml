@@ -12,18 +12,15 @@ Kirigami.ApplicationWindow {
     visible: true
     title: qsTr("Key Listener")
 
-    readonly property int columnWidth: 180
-    readonly property int rowItemHeight: 32
-    readonly property int gapSmall: 4
-    readonly property int gapMedium: 8
-    readonly property int gapLarge: 12
+    readonly property int columnWidth: 12 * Kirigami.Units.gridUnit
+    readonly property int rowItemHeight: 2 * Kirigami.Units.gridUnit
 
     pageStack.defaultColumnWidth: columnWidth
     wideScreen: width >= 3 * columnWidth
     minimumWidth: 2 * columnWidth
 
-    width: 550
-    height: 400
+    width: 40 * Kirigami.Units.gridUnit
+    height: 30 * Kirigami.Units.gridUnit
 
     globalDrawer: Kirigami.GlobalDrawer {
         id: presetsDrawer
@@ -31,7 +28,7 @@ Kirigami.ApplicationWindow {
         width: root.columnWidth
 
         contentItem: ColumnLayout {
-            Layout.margins: 12
+            Layout.margins: Kirigami.Units.mediumSpacing
 
             Kirigami.Heading {
                 text: qsTr("Presets")
@@ -53,7 +50,7 @@ Kirigami.ApplicationWindow {
                     height: root.rowItemHeight
                     width: presetListView.width
                     text: name
-                    padding: root.gapSmall
+                    padding: Kirigami.Units.smallSpacing
 
                     highlighted: ListView.isCurrentItem
                     onClicked: presetListView.currentIndex = index
@@ -118,8 +115,8 @@ Kirigami.ApplicationWindow {
             Controls.ScrollView {
                 Layout.fillHeight: true
                 Layout.preferredWidth: root.columnWidth
-                Layout.topMargin: root.gapSmall
-                Layout.bottomMargin: root.gapSmall
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
                 clip: true
 
                 ListView {
@@ -163,8 +160,8 @@ Kirigami.ApplicationWindow {
 
                 Kirigami.FormLayout {
                     Layout.fillHeight: true
-                    Layout.leftMargin: root.gapMedium
-                    Layout.rightMargin: root.gapMedium
+                    Layout.leftMargin: Kirigami.Units.mediumSpacing
+                    Layout.rightMargin: Kirigami.Units.mediumSpacing
 
                     Controls.TextField {
                         id: descTextField
@@ -189,8 +186,8 @@ Kirigami.ApplicationWindow {
 
                 RowLayout {
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    Layout.rightMargin: root.gapSmall
-                    Layout.bottomMargin: root.gapSmall
+                    Layout.rightMargin: Kirigami.Units.smallSpacing
+                    Layout.bottomMargin: Kirigami.Units.smallSpacing
 
                     Controls.Button {
                         text: qsTr("Reset")
@@ -213,7 +210,7 @@ Kirigami.ApplicationWindow {
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
         onAccepted: {
             eventListener.stop();
-            Qt.quit();
+            root.close();
         }
     }
 
@@ -231,6 +228,7 @@ Kirigami.ApplicationWindow {
     Backend.EventListener {
         id: eventListener
         onKeyPressed: key => {
+            root.hidePassiveNotification();
             root.showPassiveNotification(`${key} is pressed!`);
             presetManager.execKeyPressCommand(key);
         }
