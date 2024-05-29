@@ -4,6 +4,7 @@ import os
 import evdev
 from PySide6.QtCore import Property, QCoreApplication, QObject, Signal, Slot
 from PySide6.QtQml import QmlElement
+from PySide6.QtAsyncio import QAsyncioEventLoop
 from qasync import QEventLoop
 
 QML_IMPORT_NAME = "keylistener.backend"
@@ -22,9 +23,9 @@ class EventListener(QObject):
 
     def __init__(self):
         super().__init__()
-        self.devices = self.initDevices()
         self.loop = self.initLoop()
-        self.tasks: set[asyncio.Task] = set()
+        self.devices: list[evdev.InputDevice] = []
+        self.tasks: list[asyncio.Task] = []
 
     def isDeviceKeyboard(self, device: evdev.InputDevice) -> bool:
         caps = device.capabilities()
@@ -43,7 +44,7 @@ class EventListener(QObject):
                 result.append(device)
         return result
 
-    def initLoop(self):
+    def initLoop(self) -> QEventLoop:
         if app := QCoreApplication.instance():
             loop = QEventLoop(app)
             asyncio.set_event_loop(loop)
@@ -69,13 +70,21 @@ class EventListener(QObject):
 
     @Slot(list)
     def start(self, keys: list[str]):
+        if self.isRunning:
+            return
+        self.devices = self.initDevices()
         for device in self.devices:
             task = asyncio.ensure_future(self.listenAsync(device, keys))
-            self.tasks.add(task)
+            self.tasks.append(task)
         self.runningChanged.emit()
 
     @Slot()
     def stop(self):
+        if not self.isRunning:
+            return
+        for device in self.devices:
+            device.close()
+        self.devices.clear()
         for task in self.tasks:
             task.cancel()
         self.tasks.clear()

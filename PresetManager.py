@@ -27,7 +27,7 @@ class PresetManager(QObject):
     @Slot(result=dict)
     def getCurrentPreset(self) -> dict:
         return self.current
-    
+
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list:
         return [p["key"] for p in self.current["pressed"]]
