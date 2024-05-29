@@ -11,7 +11,6 @@ QML_IMPORT_NAME = "keylistener.backend"
 QML_IMPORT_MAJOR_VERSION = 1
 
 EV_KEY = ecodes["EV_KEY"]
-KEY_ENTER = ecodes["KEY_ENTER"]
 EVDEV_PATH = "/dev/input"
 
 
