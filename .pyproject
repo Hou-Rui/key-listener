@@ -3,6 +3,6 @@
         "main.py",
         "EventListener.py",
         "PresetManager.py",
-        "qml/main.qml"
+        "main.qml"
     ]
 }
