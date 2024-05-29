@@ -22,6 +22,11 @@ Kirigami.ApplicationWindow {
     width: 40 * Kirigami.Units.gridUnit
     height: 30 * Kirigami.Units.gridUnit
 
+    function showMessage(message: string) {
+        root.hidePassiveNotification();
+        root.showPassiveNotification(message);
+    }
+
     globalDrawer: Kirigami.GlobalDrawer {
         id: presetsDrawer
         modal: true
@@ -73,6 +78,7 @@ Kirigami.ApplicationWindow {
                 onTriggered: {
                     const keys = presetManager.getCurrentListenedKeys();
                     eventListener.start(keys);
+                    root.showMessage(qsTr("Listener has started"))
                 }
             },
             Kirigami.Action {
@@ -81,7 +87,10 @@ Kirigami.ApplicationWindow {
                 text: qsTr("Stop")
                 visible: eventListener.isRunning
                 displayHint: Kirigami.DisplayHint.KeepVisible
-                onTriggered: eventListener.stop()
+                onTriggered: {
+                    eventListener.stop();
+                    root.showMessage(qsTr("Listener has stopped"));
+                }
             },
             Kirigami.Action {
                 id: actionAddListener
@@ -99,7 +108,7 @@ Kirigami.ApplicationWindow {
 
         Kirigami.PromptDialog {
             id: removeListenerDialog
-            title: "Confirm Removal?"
+            title: qsTr("Confirm Removal?")
             subtitle: {
                 const listener = listenerListView.getCurrentListener();
                 return qsTr(`The listener "${listener.desc}" will be removed.`);
@@ -205,8 +214,8 @@ Kirigami.ApplicationWindow {
 
     Kirigami.PromptDialog {
         id: confirmCloseDialog
-        title: "Exit Key Listener?"
-        subtitle: "All current listeners will be stopped."
+        title: qsTr("Exit Key Listener?")
+        subtitle: qsTr("All current listeners will be stopped.")
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
         onAccepted: {
             eventListener.stop();
@@ -228,8 +237,7 @@ Kirigami.ApplicationWindow {
     Backend.EventListener {
         id: eventListener
         onKeyPressed: key => {
-            root.hidePassiveNotification();
-            root.showPassiveNotification(`${key} is pressed!`);
+            root.showMessage(qsTr(`Key pressed: ${key}`));
             presetManager.execKeyPressCommand(key);
         }
     }
