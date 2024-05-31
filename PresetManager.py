@@ -1,10 +1,8 @@
-from dataclasses import dataclass
-from subprocess import PIPE, Popen
-from typing import Any
-import shlex
+from typing import Any, Iterable
 
 import yaml
-from PySide6.QtCore import QObject, Slot, Property
+from PySide6.QtCore import (QObject, Signal, SignalInstance,
+                            Slot, Property, QProcess)
 from PySide6.QtQml import QmlElement
 
 QML_IMPORT_NAME = "keylistener.backend"
@@ -12,6 +10,10 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 class Event(QObject):
+    keyChanged = Signal()
+    descChanged = Signal()
+    cmdChanged = Signal()
+
     def __init__(self, key: str, desc: str, cmd: str,
                  parent: QObject | None = None):
         super().__init__(parent)
@@ -19,39 +21,43 @@ class Event(QObject):
         self._desc = desc
         self._cmd = cmd
 
-    @Property(str)  # type: ignore
+    def signals(self) -> Iterable[SignalInstance]:
+        return (self.keyChanged, self.descChanged, self.cmdChanged)
+
+    @Property(str, notify=keyChanged)  # type: ignore
     def key(self):
         return self._key
 
-    @Property(str)  # type: ignore
+    @Property(str, notify=descChanged)  # type: ignore
     def desc(self):
         return self._desc
-    
-    @Property(str)  # type: ignore
+
+    @Property(str, notify=cmdChanged)  # type: ignore
     def cmd(self):
         return self._cmd
 
-type YamlDict = dict[str, Any]
-
 
 class Preset(QObject):
-    def __init__(self, data: YamlDict,
+    nameChanged = Signal()
+    bindingChanged = Signal()
+
+    def __init__(self, data: dict[str, Any],
                  parent: QObject | None = None):
         super().__init__(parent)
         self.data = data
         self._name = self.initName()
-        self._shell = self.initShell()
-        self._pressed = self.initPressed()
+        self._shell, self._shellProcess = self.initShell()
+        self._binding = self.initBinding()
 
-    @Property(str)  # type: ignore
+    @Property(str, notify=nameChanged)  # type: ignore
     def name(self):
         return self._name
-    
-    @Property(list)  # type: ignore
-    def pressed(self):
-        return self._pressed
 
-    def get(self, key: str, data: dict | None = None):
+    @Property(list, notify=bindingChanged)  # type: ignore
+    def binding(self):
+        return self._binding
+
+    def ensure(self, key: str, data: dict | None = None):
         if not data:
             data = self.data
         if result := data.get(key):
@@ -59,30 +65,36 @@ class Preset(QObject):
         raise RuntimeError(f"Missing field {key}")
 
     def initName(self) -> str:
-        return self.get('name')
+        return self.ensure('name')
 
-    def initShell(self) -> Popen:
-        if not (shell := self.get('shell')):
+    def initShell(self) -> tuple[str, QProcess]:
+        if not (shell := self.data.get('shell')):
             shell = '/bin/sh'
-        args = shlex.split(shell)
-        return Popen(args, stdin=PIPE)
+        shellProcess = QProcess(self)
+        return shell, shellProcess
 
-    def initPressed(self) -> list[Event]:
-        root: list[dict] = self.get('pressed')
-        return [Event(self.get('key', p),
-                      self.get('desc', p),
-                      self.get('cmd', p), parent=self)
-                for p in root]
+    def initBinding(self) -> list[Event]:
+        binding: list[dict[str, Any]] = self.ensure('binding')
+        result = []
+        for p in binding:
+            event = Event(self.ensure('key', p),
+                          self.ensure('desc', p),
+                          self.ensure('cmd', p), parent=self)
+            for sig in event.signals():
+                sig.connect(self.bindingChanged.emit)
+            result.append(event)
+        return result
 
     def exec(self, key: str):
-        for event in self._pressed:
+        if self._shellProcess.state() != QProcess.ProcessState.Running:
+            self._shellProcess.startCommand(self._shell)
+            self._shellProcess.waitForStarted(5)
+        for event in self._binding:
             if event.key != key:
                 continue
-            cmd = event._cmd.encode() + b'\n'
+            cmd = event._cmd.encode() + b'&\n'
             print(f'executing {cmd}')
-            if not (stdin := self._shell.stdin):
-                raise RuntimeError(f"{self._shell.args} has no stdin")
-            stdin.write(cmd)
+            self._shellProcess.write(cmd)
 
 
 @QmlElement
@@ -107,7 +119,7 @@ class PresetManager(QObject):
 
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list:
-        return [p.key for p in self.current._pressed]
+        return [p.key for p in self.current._binding]
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> str | None:

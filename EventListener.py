@@ -3,7 +3,7 @@ import os
 
 import evdev
 from evdev.ecodes import ecodes
-from PySide6.QtCore import Property, QCoreApplication, QObject, Signal, Slot
+from PySide6.QtCore import Property, QObject, QThread, Signal, Slot
 from PySide6.QtQml import QmlElement
 from qasync import QEventLoop
 
@@ -18,11 +18,11 @@ EVDEV_PATH = "/dev/input"
 class EventListener(QObject):
     keyPressed = Signal(str)
     keyReleased = Signal(str)
-    runningChanged = Signal()
+    listeningChanged = Signal()
 
-    def __init__(self):
-        super().__init__()
-        self.loop = self.initLoop()
+    def __init__(self, parent: QObject | None = None):
+        super().__init__(parent)
+        self.loop, self.loopThread = self.initLoop()
         self.devices: list[evdev.InputDevice] = []
         self.tasks: list[asyncio.Task] = []
 
@@ -43,12 +43,12 @@ class EventListener(QObject):
                 result.append(device)
         return result
 
-    def initLoop(self) -> QEventLoop:
-        if app := QCoreApplication.instance():
-            loop = QEventLoop(app)
-            asyncio.set_event_loop(loop)
-            return loop
-        raise RuntimeError("QCoreApplication no instance")
+    def initLoop(self) -> tuple[QEventLoop, QThread]:
+        thread = QThread(self)
+        thread.start()
+        loop = QEventLoop(thread)
+        asyncio.set_event_loop(loop)
+        return loop, thread
 
     async def listenAsync(self, device: evdev.InputDevice, keys: list[str]):
         async for event in device.async_read_loop():
@@ -63,23 +63,29 @@ class EventListener(QObject):
                 case evdev.KeyEvent.key_up:
                     self.keyReleased.emit(keyEvent.keycode)
 
-    @Property(bool, notify=runningChanged)  # type: ignore
-    def isRunning(self) -> bool:
+    @Property(bool, notify=listeningChanged)  # type: ignore
+    def isListening(self) -> bool:
         return len(self.tasks) > 0
 
+    @Slot()
+    def cleanUp(self):
+        self.stopListening()
+        self.loop.stop()
+        self.loopThread.exit()
+
     @Slot(list)
-    def start(self, keys: list[str]):
-        if self.isRunning:
+    def startListening(self, keys: list[str]):
+        if self.isListening:
             return
         self.devices = self.initDevices(keys)
         for device in self.devices:
             task = asyncio.ensure_future(self.listenAsync(device, keys))
             self.tasks.append(task)
-        self.runningChanged.emit()
+        self.listeningChanged.emit()
 
     @Slot()
-    def stop(self):
-        if not self.isRunning:
+    def stopListening(self):
+        if not self.isListening:
             return
         for device in self.devices:
             device.close()
@@ -87,4 +93,4 @@ class EventListener(QObject):
         for task in self.tasks:
             task.cancel()
         self.tasks.clear()
-        self.runningChanged.emit()
+        self.listeningChanged.emit()

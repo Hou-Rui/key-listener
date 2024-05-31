@@ -73,11 +73,11 @@ Kirigami.ApplicationWindow {
                 id: actionStartListener
                 icon.name: "media-playback-start"
                 text: qsTr("Start")
-                visible: !eventListener.isRunning
+                visible: !eventListener.isListening
                 displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
                     const keys = presetManager.getCurrentListenedKeys();
-                    eventListener.start(keys);
+                    eventListener.startListening(keys);
                     root.showMessage(qsTr("Listener has started"))
                 }
             },
@@ -85,10 +85,10 @@ Kirigami.ApplicationWindow {
                 id: actionStopListener
                 icon.name: "media-playback-stop"
                 text: qsTr("Stop")
-                visible: eventListener.isRunning
+                visible: eventListener.isListening
                 displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
-                    eventListener.stop();
+                    eventListener.stopListening();
                     root.showMessage(qsTr("Listener has stopped"));
                 }
             },
@@ -131,7 +131,10 @@ Kirigami.ApplicationWindow {
                 ListView {
                     id: listenerListView
                     reuseItems: true
-                    model: presetManager.getCurrentPreset().pressed
+                    model: {
+                        const preset = presetManager.getCurrentPreset();
+                        return preset.binding;
+                    }
 
                     function getCurrentListener() {
                         return model[currentIndex];
@@ -218,15 +221,17 @@ Kirigami.ApplicationWindow {
         subtitle: qsTr("All current listeners will be stopped.")
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
         onAccepted: {
-            eventListener.stop();
+            eventListener.cleanUp();
             root.close();
         }
     }
 
     onClosing: close => {
-        if (eventListener.isRunning) {
+        if (eventListener.isListening) {
             close.accepted = false;
             confirmCloseDialog.visible = true;
+        } else {
+            eventListener.cleanUp();
         }
     }
 
