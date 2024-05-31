@@ -48,6 +48,14 @@ Kirigami.ApplicationWindow {
                 reuseItems: true
                 model: presetManager.getPresets()
 
+                onCurrentIndexChanged: {
+                    if (eventListener.isListening) {
+                        eventListener.stopListening();
+                        root.showMessage(qsTr("Listener has stopped due to switching preset"));
+                    }
+                    presetManager.currentPresetIndex = currentIndex;
+                }
+
                 delegate: Controls.ItemDelegate {
                     required property string name
                     required property int index
@@ -78,7 +86,7 @@ Kirigami.ApplicationWindow {
                 onTriggered: {
                     const keys = presetManager.getCurrentListenedKeys();
                     eventListener.startListening(keys);
-                    root.showMessage(qsTr("Listener has started"))
+                    root.showMessage(qsTr("Listener has started"));
                 }
             },
             Kirigami.Action {
@@ -102,16 +110,16 @@ Kirigami.ApplicationWindow {
                 id: actionRemoveListener
                 icon.name: "list-remove"
                 text: qsTr("Remove")
-                onTriggered: removeListenerDialog.visible = true
+                onTriggered: removeBindingDialog.visible = true
             }
         ]
 
         Kirigami.PromptDialog {
-            id: removeListenerDialog
+            id: removeBindingDialog
             title: qsTr("Confirm Removal?")
             subtitle: {
-                const listener = listenerListView.getCurrentListener();
-                return qsTr(`The listener "${listener.desc}" will be removed.`);
+                const binding = bindingListView.currentBinding();
+                return qsTr(`The binding "${binding.desc}" will be removed.`);
             }
             standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
             // onAccepted: document.save()
@@ -129,22 +137,19 @@ Kirigami.ApplicationWindow {
                 clip: true
 
                 ListView {
-                    id: listenerListView
+                    id: bindingListView
                     reuseItems: true
-                    model: {
-                        const preset = presetManager.getCurrentPreset();
-                        return preset.binding;
-                    }
+                    model: presetManager.currentPreset.binding
 
-                    function getCurrentListener() {
+                    function currentBinding() {
                         return model[currentIndex];
                     }
 
                     onCurrentIndexChanged: {
-                        const listener = getCurrentListener();
-                        cmdTextField.text = listener.cmd;
-                        keyTextField.text = listener.key;
-                        descTextField.text = listener.desc;
+                        const binding = currentBinding();
+                        cmdTextField.text = binding.cmd;
+                        keyTextField.text = binding.key;
+                        descTextField.text = binding.desc;
                     }
 
                     delegate: Controls.ItemDelegate {
@@ -154,10 +159,10 @@ Kirigami.ApplicationWindow {
                         required property int index
 
                         text: desc
-                        width: listenerListView.width
+                        width: bindingListView.width
                         height: root.rowItemHeight
                         highlighted: ListView.isCurrentItem
-                        onClicked: listenerListView.currentIndex = index
+                        onClicked: bindingListView.currentIndex = index
                     }
                 }
             }
@@ -224,7 +229,7 @@ Kirigami.ApplicationWindow {
     Kirigami.PromptDialog {
         id: confirmCloseDialog
         title: qsTr("Exit Key Listener?")
-        subtitle: qsTr("All current listeners will be stopped.")
+        subtitle: qsTr("All current bindings will be stopped.")
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
         onAccepted: root.cleanClose()
     }

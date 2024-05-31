@@ -31,6 +31,7 @@ class Binding(QObject):
     @key.setter
     def key(self, newKey: str) -> None:
         self._key = newKey
+        self.keyChanged.emit()
 
     @Property(str, notify=descChanged)  # type: ignore
     def desc(self) -> str:  # type: ignore
@@ -39,6 +40,7 @@ class Binding(QObject):
     @desc.setter
     def desc(self, newDesc: str) -> None:
         self._desc = newDesc
+        self.descChanged.emit()
 
     @Property(str, notify=cmdChanged)  # type: ignore
     def cmd(self) -> str:  # type: ignore
@@ -47,6 +49,7 @@ class Binding(QObject):
     @cmd.setter
     def cmd(self, newCmd: str) -> None:
         self._cmd = newCmd
+        self.cmdChanged.emit()
 
 
 class Preset(QObject):
@@ -68,6 +71,7 @@ class Preset(QObject):
     @name.setter
     def name(self, newName: str) -> None:
         self._name = newName
+        self.nameChanged.emit()
 
     @Property(list, notify=bindingChanged)  # type: ignore
     def binding(self) -> list[Binding]:
@@ -90,7 +94,8 @@ class Preset(QObject):
         return shell, shellProcess
 
     def stopShell(self) -> None:
-        self._shellProcess.terminate()
+        if self._shellProcess.state() == QProcess.ProcessState.Running:
+            self._shellProcess.terminate()
 
     def initBinding(self) -> list[Binding]:
         bindings: list[dict[str, Any]] = self.ensure('bindings')
@@ -118,27 +123,39 @@ class Preset(QObject):
 
 @QmlElement
 class PresetManager(QObject):
+    currentPresetChanged = Signal()
+
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.path = "preset.yml"
         self.presets = self.initPresets()
-        self.currentPreset = self.presets[0]
+        self._currentPresetIndex = 0
 
     def initPresets(self) -> list[Preset]:
         with open(self.path) as config_file:
             return [Preset(p, self) for p in yaml.safe_load(config_file)]
 
+    @Property(int, notify=currentPresetChanged) # type: ignore
+    def currentPresetIndex(self) -> int: # type: ignore
+        return self._currentPresetIndex
+    
+    @currentPresetIndex.setter
+    def currentPresetIndex(self, newIndex: int) -> None:
+        self.currentPreset.stopShell()
+        self._currentPresetIndex = newIndex
+        self.currentPresetChanged.emit()
+
     @Slot(result=list)
     def getPresets(self) -> list[Preset]:
         return self.presets
 
-    @Slot(result=Preset)
-    def getCurrentPreset(self) -> Preset:
-        return self.currentPreset
+    @Property("QVariant", notify=currentPresetChanged) # type: ignore
+    def currentPreset(self) -> Preset:
+        return self.presets[self.currentPresetIndex]
 
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list:
-        return [p.key for p in self.currentPreset._binding]
+        return [p.key for p in self.currentPreset.binding]
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> None:
