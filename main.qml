@@ -208,11 +208,17 @@ Kirigami.ApplicationWindow {
 
                     Controls.Button {
                         text: qsTr("Apply")
-                        icon.name: "dialog-apply"
+                        icon.name: "dialog-ok-apply"
                     }
                 }
             }
         }
+    }
+
+    function cleanClose() {
+        eventListener.cleanUp();
+        presetManager.cleanUp();
+        root.close();
     }
 
     Kirigami.PromptDialog {
@@ -220,10 +226,7 @@ Kirigami.ApplicationWindow {
         title: qsTr("Exit Key Listener?")
         subtitle: qsTr("All current listeners will be stopped.")
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
-        onAccepted: {
-            eventListener.cleanUp();
-            root.close();
-        }
+        onAccepted: root.cleanClose()
     }
 
     onClosing: close => {
@@ -231,7 +234,7 @@ Kirigami.ApplicationWindow {
             close.accepted = false;
             confirmCloseDialog.visible = true;
         } else {
-            eventListener.cleanUp();
+            root.cleanClose();
         }
     }
 

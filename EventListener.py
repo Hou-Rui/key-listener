@@ -20,13 +20,14 @@ class EventListener(QObject):
     keyReleased = Signal(str)
     listeningChanged = Signal()
 
-    def __init__(self, parent: QObject | None = None):
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.loop, self.loopThread = self.initLoop()
         self.devices: list[evdev.InputDevice] = []
         self.tasks: list[asyncio.Task] = []
 
-    def supportsKeys(self, device: evdev.InputDevice, keys: list[str]) -> bool:
+    def supportsKeys(self, device: evdev.InputDevice,
+                     keys: list[str]) -> bool:
         caps = device.capabilities()
         if supported := caps.get(EV_KEY):
             return all(ecodes.get(key) in supported for key in keys)
@@ -50,7 +51,8 @@ class EventListener(QObject):
         asyncio.set_event_loop(loop)
         return loop, thread
 
-    async def listenAsync(self, device: evdev.InputDevice, keys: list[str]):
+    async def listenAsync(self, device: evdev.InputDevice,
+                          keys: list[str]) -> None:
         async for event in device.async_read_loop():
             if event.type != EV_KEY:
                 continue
@@ -68,13 +70,13 @@ class EventListener(QObject):
         return len(self.tasks) > 0
 
     @Slot()
-    def cleanUp(self):
+    def cleanUp(self) -> None:
         self.stopListening()
         self.loop.stop()
         self.loopThread.exit()
 
     @Slot(list)
-    def startListening(self, keys: list[str]):
+    def startListening(self, keys: list[str]) -> None:
         if self.isListening:
             return
         self.devices = self.initDevices(keys)
@@ -84,7 +86,7 @@ class EventListener(QObject):
         self.listeningChanged.emit()
 
     @Slot()
-    def stopListening(self):
+    def stopListening(self) -> None:
         if not self.isListening:
             return
         for device in self.devices:

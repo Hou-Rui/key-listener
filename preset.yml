@@ -1,16 +1,7 @@
 ---
-- name: Test Preset
-  binding:
-    - key: KEY_LEFT
-      desc: Test left
-      cmd: kdialog --msgbox 'left'
-    - key: KEY_RIGHT
-      desc: Test right
-      cmd: kdialog --msgbox 'right'
-
 - name: Subway Surfers
   shell: adb shell
-  binding:
+  bindings:
     - key: KEY_LEFT
       desc: Swipe left from center
       cmd: input swipe 960 540 800 540 100
@@ -23,3 +14,12 @@
     - key: KEY_DOWN
       desc: Swipe down from center
       cmd: input swipe 960 400 960 540 100
+
+- name: Test Preset
+  bindings:
+    - key: KEY_LEFT
+      desc: Test left
+      cmd: kdialog --msgbox 'left'
+    - key: KEY_RIGHT
+      desc: Test right
+      cmd: kdialog --msgbox 'right'

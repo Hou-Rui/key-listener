@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
 import signal
@@ -8,14 +8,14 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-from PresetManager import PresetManager
 from EventListener import EventListener
+from PresetManager import PresetManager
 
 assert PresetManager is not None
 assert EventListener is not None
 
 
-def main():
+def main() -> None:
     app = QGuiApplication(sys.argv)
     app.setApplicationName("KeyListener")
     app.setApplicationDisplayName("Key Listener")
@@ -32,7 +32,7 @@ def main():
     if not engine.rootObjects():
         exit(-1)
 
-    app.exec()
+    exit(app.exec())
 
 
 if __name__ == "__main__":
