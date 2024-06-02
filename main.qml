@@ -118,7 +118,7 @@ Kirigami.ApplicationWindow {
             id: removeBindingDialog
             title: qsTr("Confirm Removal?")
             subtitle: {
-                const binding = bindingListView.currentBinding();
+                const binding = bindingListView.currentBinding;
                 return qsTr(`The binding "${binding.desc}" will be removed.`);
             }
             standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
@@ -140,17 +140,14 @@ Kirigami.ApplicationWindow {
                     id: bindingListView
                     reuseItems: true
                     model: presetManager.currentPreset.binding
+                    property var currentBinding: model[currentIndex]
 
-                    function currentBinding() {
-                        return model[currentIndex];
-                    }
-
-                    onCurrentIndexChanged: {
-                        const binding = currentBinding();
-                        cmdTextField.text = binding.cmd;
-                        keyTextField.text = binding.key;
-                        descTextField.text = binding.desc;
-                    }
+                    // onCurrentIndexChanged: {
+                    //     const binding = currentBinding();
+                    //     cmdTextArea.text = binding.cmd;
+                    //     keyTextField.text = binding.key;
+                    //     descTextField.text = binding.desc;
+                    // }
 
                     delegate: Controls.ItemDelegate {
                         required property string key
@@ -183,17 +180,33 @@ Kirigami.ApplicationWindow {
                     Controls.TextField {
                         id: descTextField
                         Kirigami.FormData.label: qsTr("Description:")
+                        text: bindingListView.currentBinding.desc
                     }
 
                     Controls.TextField {
                         id: keyTextField
-                        Kirigami.FormData.label: qsTr("Keys:")
+                        Kirigami.FormData.label: qsTr("Key:")
+                        text: bindingListView.currentBinding.key
                     }
 
-                    Controls.TextField {
-                        id: cmdTextField
+                    Controls.ComboBox {
+                        id: eventComboBox
+                        Kirigami.FormData.label: qsTr("Triggered when:")
+                        model: [qsTr("Pressed"), qsTr("Released")]
+                        currentIndex: {
+                            switch (bindingListView.currentBinding.event) {
+                                case "pressed": return 0;
+                                case "released": return 1;
+                                default: return -1;
+                            }
+                        }
+                    }
+
+                    Controls.TextArea {
+                        id: cmdTextArea
                         wrapMode: TextEdit.WordWrap
                         Kirigami.FormData.label: qsTr("Execute Command:")
+                        text: bindingListView.currentBinding.cmd
                     }
                 }
 
@@ -245,6 +258,9 @@ Kirigami.ApplicationWindow {
 
     Backend.PresetManager {
         id: presetManager
+        onErrorHappened: error => {
+            root.showMessage(error);
+        }
     }
 
     Backend.EventListener {
@@ -252,6 +268,10 @@ Kirigami.ApplicationWindow {
         onKeyPressed: key => {
             root.showMessage(qsTr(`Key pressed: ${key}`));
             presetManager.execKeyPressCommand(key);
+        }
+        onKeyReleased: key => {
+            root.showMessage(qsTr(`Key released: ${key}`));
+            presetManager.execKeyReleaseCommand(key);
         }
     }
 }

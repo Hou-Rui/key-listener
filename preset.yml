@@ -4,22 +4,46 @@
   bindings:
     - key: KEY_LEFT
       desc: Swipe left from center
-      cmd: input swipe 960 540 800 540 100
+      cmd: input swipe 960 540 800 540 100 &
     - key: KEY_RIGHT
       desc: Swipe right from center
-      cmd: input swipe 800 540 960 540 100
+      cmd: input swipe 800 540 960 540 100 &
     - key: KEY_UP
       desc: Swipe up from center
-      cmd: input swipe 960 540 960 400 100
+      cmd: input swipe 960 540 960 400 100 &
     - key: KEY_DOWN
       desc: Swipe down from center
-      cmd: input swipe 960 400 960 540 100
+      cmd: input swipe 960 400 960 540 100 &
+    - key: KEY_SPACE
+      desc: Double tap at center
+      cmd: input tap 960 540; sleep 0.2; input tap 960 540
+
+- name: Alto's Odyssey
+  shell: adb shell
+  bindings:
+    - key: KEY_SPACE
+      event: pressed
+      desc: Press on center
+      cmd: |
+        sendevent /dev/input/event2 3 0 960
+        sendevent /dev/input/event2 3 1 540
+        sendevent /dev/input/event2 1 330 1
+        sendevent /dev/input/event2 0 0 0
+    - key: KEY_SPACE
+      event: released
+      desc: Release from center
+      cmd: |
+        sendevent /dev/input/event2 1 330 0
+        sendevent /dev/input/event2 0 0 0
+    - key: KEY_UP
+      desc: Activate wingsuit
+      cmd: input tap 50 540
 
 - name: Test Preset
   bindings:
     - key: KEY_LEFT
       desc: Test left
-      cmd: kdialog --msgbox 'left'
+      cmd: kdialog --msgbox 'left' &
     - key: KEY_RIGHT
       desc: Test right
-      cmd: kdialog --msgbox 'right'
+      cmd: kdialog --msgbox 'right' &

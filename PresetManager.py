@@ -11,18 +11,21 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 class Binding(QObject):
     keyChanged = Signal()
+    eventChanged = Signal()
     descChanged = Signal()
     cmdChanged = Signal()
 
-    def __init__(self, key: str, desc: str, cmd: str,
+    def __init__(self, key: str, event: str, desc: str, cmd: str,
                  parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._key = key
+        self._event = event
         self._desc = desc
         self._cmd = cmd
 
     def signals(self) -> Iterable[SignalInstance]:
-        return (self.keyChanged, self.descChanged, self.cmdChanged)
+        return (self.keyChanged, self.eventChanged,
+                self.descChanged, self.cmdChanged)
 
     @Property(str, notify=keyChanged)  # type: ignore
     def key(self) -> str:  # type: ignore
@@ -32,6 +35,15 @@ class Binding(QObject):
     def key(self, newKey: str) -> None:
         self._key = newKey
         self.keyChanged.emit()
+
+    @Property(str, notify=eventChanged)  # type: ignore
+    def event(self) -> str:  # type: ignore
+        return self._event
+
+    @event.setter
+    def event(self, newKey: str) -> None:
+        self._event = newKey.lower()
+        self.eventChanged.emit()
 
     @Property(str, notify=descChanged)  # type: ignore
     def desc(self) -> str:  # type: ignore
@@ -55,6 +67,7 @@ class Binding(QObject):
 class Preset(QObject):
     nameChanged = Signal()
     bindingChanged = Signal()
+    errorHappened = Signal(str)
 
     def __init__(self, data: dict[str, Any],
                  parent: QObject | None = None) -> None:
@@ -82,14 +95,14 @@ class Preset(QObject):
             data = self.data
         if result := data.get(key):
             return result
-        raise RuntimeError(f"Missing field {key}")
+        msg = self.tr(f'config "{key}" missing')
+        self.errorHappened.emit(msg)
 
     def initName(self) -> str:
         return self.ensure('name')
 
     def initShell(self) -> tuple[str, QProcess]:
-        if not (shell := self.data.get('shell')):
-            shell = '/bin/sh'
+        shell = self.data.get('shell', '/bin/sh')
         shellProcess = QProcess(self)
         return shell, shellProcess
 
@@ -101,29 +114,34 @@ class Preset(QObject):
         bindings: list[dict[str, Any]] = self.ensure('bindings')
         result = []
         for p in bindings:
-            binding = Binding(self.ensure('key', p),
-                              self.ensure('desc', p),
-                              self.ensure('cmd', p), parent=self)
+            key = self.ensure('key', p)
+            desc = self.ensure('desc', p)
+            cmd = self.ensure('cmd', p)
+            event = p.get('event', 'pressed')
+            binding = Binding(key, event, desc, cmd, parent=self)
             for sig in binding.signals():
                 sig.connect(self.bindingChanged.emit)
             result.append(binding)
         return result
 
-    def exec(self, key: str) -> None:
+    def exec(self, key: str, event: str) -> None:
         if self._shellProcess.state() != QProcess.ProcessState.Running:
             self._shellProcess.startCommand(self._shell)
-            self._shellProcess.waitForStarted(5)
-        for event in self._binding:
-            if event.key != key:
-                continue
-            cmd = event._cmd.encode() + b'&\n'
-            print(f'executing {cmd}')
-            self._shellProcess.write(cmd)
+            self._shellProcess.waitForStarted()
+        if self._shellProcess.state() != QProcess.ProcessState.Running:
+            msg = self.tr(f"Process {self._shell} time out")
+            self.errorHappened.emit(msg)
+        for binding in self._binding:
+            if binding.key == key and binding.event == event:
+                print(f'executing {binding._cmd}')
+                cmd = binding._cmd + '\n'
+                self._shellProcess.write(cmd.encode())
 
 
 @QmlElement
 class PresetManager(QObject):
     currentPresetChanged = Signal()
+    errorHappened = Signal(str)
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -132,8 +150,19 @@ class PresetManager(QObject):
         self._currentPresetIndex = 0
 
     def initPresets(self) -> list[Preset]:
-        with open(self.path) as config_file:
-            return [Preset(p, self) for p in yaml.safe_load(config_file)]
+        try:
+            with open(self.path) as config_file:
+                result = []
+                for p in yaml.safe_load(config_file):
+                    preset = Preset(p, self)
+                    preset.errorHappened.connect(self.errorHappened.emit)
+                    result.append(preset)
+                return result
+        except OSError as err:
+            self.errorHappened.emit(self.tr(f'OS error: {err}'))
+        except yaml.YAMLError as err:
+            self.errorHappened.emit(self.tr(f'YAML error: {err}'))
+        return []
 
     @Property(int, notify=currentPresetChanged) # type: ignore
     def currentPresetIndex(self) -> int: # type: ignore
@@ -159,7 +188,11 @@ class PresetManager(QObject):
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> None:
-        self.currentPreset.exec(key)
+        self.currentPreset.exec(key, event='pressed')
+
+    @Slot(str)
+    def execKeyReleaseCommand(self, key: str) -> None:
+        self.currentPreset.exec(key, event='released')
 
     @Slot()
     def cleanUp(self) -> None:
