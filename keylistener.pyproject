@@ -1,0 +1,6 @@
+{
+    "files": [
+        "src/main.py",
+        "src/build.pyproject"
+    ]
+}

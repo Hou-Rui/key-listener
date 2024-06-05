@@ -16,7 +16,8 @@
       cmd: input swipe 960 400 960 540 100 &
     - key: KEY_SPACE
       desc: Double tap at center
-      cmd: input tap 960 540; sleep 0.2; input tap 960 540
+      shell: /bin/sh
+      cmd: ydotool click -r 2 0xC0
 
 - name: Alto's Odyssey
   shell: adb shell

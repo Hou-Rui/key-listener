@@ -1,0 +1,9 @@
+{
+    "files": [
+        "main.py",
+        "event_listener.py",
+        "binding.py",
+        "preset_manager.py",
+        "qml/build.pyproject"
+    ]
+}

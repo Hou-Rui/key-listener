@@ -104,7 +104,6 @@ Kirigami.ApplicationWindow {
                 id: actionAddListener
                 icon.name: "list-add"
                 text: qsTr("Add")
-                // onTriggered: addListenerDialog.visible = true
             },
             Kirigami.Action {
                 id: actionRemoveListener
@@ -141,13 +140,6 @@ Kirigami.ApplicationWindow {
                     reuseItems: true
                     model: presetManager.currentPreset.binding
                     property var currentBinding: model[currentIndex]
-
-                    // onCurrentIndexChanged: {
-                    //     const binding = currentBinding();
-                    //     cmdTextArea.text = binding.cmd;
-                    //     keyTextField.text = binding.key;
-                    //     descTextField.text = binding.desc;
-                    // }
 
                     delegate: Controls.ItemDelegate {
                         required property string key
@@ -192,6 +184,7 @@ Kirigami.ApplicationWindow {
                     Controls.ComboBox {
                         id: eventComboBox
                         Kirigami.FormData.label: qsTr("Triggered when:")
+                        Layout.fillWidth: true
                         model: [qsTr("Pressed"), qsTr("Released")]
                         currentIndex: {
                             switch (bindingListView.currentBinding.event) {
@@ -200,12 +193,25 @@ Kirigami.ApplicationWindow {
                                 default: return -1;
                             }
                         }
+                        onCurrentIndexChanged: {
+                            print(model, currentIndex);
+                            const event = model[currentIndex];
+                            bindingListView.currentBinding.event = event;
+                        }
+                    }
+
+                    Controls.TextField {
+                        id: shellTextField
+                        Kirigami.FormData.label: "Shell:"
+                        placeholderText: presetManager.currentPreset.shell
                     }
 
                     Controls.TextArea {
                         id: cmdTextArea
+                        Layout.fillWidth: true
                         wrapMode: TextEdit.WordWrap
                         Kirigami.FormData.label: qsTr("Execute Command:")
+                        Kirigami.FormData.labelAlignment: Qt.AlignCenter
                         text: bindingListView.currentBinding.cmd
                     }
                 }

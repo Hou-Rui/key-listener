@@ -8,8 +8,8 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-from EventListener import EventListener
-from PresetManager import PresetManager
+from event_listener import EventListener
+from preset_manager import PresetManager
 
 assert PresetManager is not None
 assert EventListener is not None
@@ -27,7 +27,7 @@ def main() -> None:
     if "QT_QUICK_CONTROLS_STYLE" not in os.environ:
         os.environ["QT_QUICK_CONTROLS_STYLE"] = "org.kde.desktop"
 
-    engine.load(Path(__file__).parent / "main.qml")
+    engine.load(Path(__file__).parent / "qml" / "main.qml")
 
     if not engine.rootObjects():
         exit(-1)

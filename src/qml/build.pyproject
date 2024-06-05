@@ -1,8 +1,6 @@
 {
     "files": [
         "main.py",
-        "EventListener.py",
-        "PresetManager.py",
         "main.qml"
     ]
 }
