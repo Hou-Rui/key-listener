@@ -53,7 +53,7 @@ class PresetManager(QObject):
         return self.presets[self.currentPresetIndex]
 
     @Slot(result=list)
-    def getCurrentListenedKeys(self) -> list:
+    def getCurrentListenedKeys(self) -> list[str]:
         return [p.key for p in self.currentPreset.binding]
 
     @Slot(str)

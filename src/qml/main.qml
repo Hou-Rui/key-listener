@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
-import keylistener.backend as Backend
+import "../../keylistener/backend" as Backend
 
 Kirigami.ApplicationWindow {
     id: root
@@ -188,9 +188,12 @@ Kirigami.ApplicationWindow {
                         model: [qsTr("Pressed"), qsTr("Released")]
                         currentIndex: {
                             switch (bindingListView.currentBinding.event) {
-                                case "pressed": return 0;
-                                case "released": return 1;
-                                default: return -1;
+                            case "pressed":
+                                return 0;
+                            case "released":
+                                return 1;
+                            default:
+                                return -1;
                             }
                         }
                         onCurrentIndexChanged: {

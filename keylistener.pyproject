@@ -1,6 +1,10 @@
 {
     "files": [
         "src/main.py",
-        "src/build.pyproject"
+        "src/binding.py",
+        "src/preset.py",
+        "src/preset_manager.py",
+        "src/event_listener.py",
+        "src/qml/main.qml"
     ]
 }
