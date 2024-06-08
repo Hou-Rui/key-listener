@@ -27,9 +27,10 @@ class Preset(QObject):
         data = {
             'name': 'New Preset',
             'shell': '/bin/sh',
-            'bindings': [Binding.sample().toDict()]
+            'bindings': []
         }
         preset = cls(data, parent)
+        preset._bindings.append(Binding.sample(preset))
         return preset
 
     def toDict(self) -> dict[str, Any]:
@@ -84,6 +85,8 @@ class Preset(QObject):
 
     def initBinding(self) -> list[Binding]:
         bindings: list[dict[str, Any]] = self.ensure('bindings')
+        if not bindings:
+            return []
         result = []
         for p in bindings:
             key = self.ensure('key', p)

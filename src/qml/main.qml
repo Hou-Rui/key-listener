@@ -235,7 +235,6 @@ Kirigami.ApplicationWindow {
                         Kirigami.FormData.labelAlignment: Qt.AlignCenter
                         text: bindingListView.currentBinding.cmd
                     }
-                    
                 }
 
                 Kirigami.Separator {
