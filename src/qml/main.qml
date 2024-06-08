@@ -138,7 +138,7 @@ Kirigami.ApplicationWindow {
                 ListView {
                     id: bindingListView
                     reuseItems: true
-                    model: presetManager.currentPreset.binding
+                    model: presetManager.currentPreset.bindings
                     property var currentBinding: model[currentIndex]
 
                     delegate: Controls.ItemDelegate {
@@ -169,20 +169,29 @@ Kirigami.ApplicationWindow {
                     Layout.leftMargin: Kirigami.Units.mediumSpacing
                     Layout.rightMargin: Kirigami.Units.mediumSpacing
 
+                    Kirigami.Separator {
+                        visible: bindingListView.model.count != 0
+                        Kirigami.FormData.isSection: true
+                        Kirigami.FormData.label: qsTr("Binding Settings")
+                    }
+
                     Controls.TextField {
                         id: descTextField
+                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Description:")
                         text: bindingListView.currentBinding.desc
                     }
 
                     Controls.TextField {
                         id: keyTextField
+                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Key:")
                         text: bindingListView.currentBinding.key
                     }
 
                     Controls.ComboBox {
                         id: eventComboBox
+                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Triggered when:")
                         Layout.fillWidth: true
                         model: [qsTr("Pressed"), qsTr("Released")]
@@ -197,26 +206,36 @@ Kirigami.ApplicationWindow {
                             }
                         }
                         onCurrentIndexChanged: {
-                            print(model, currentIndex);
                             const event = model[currentIndex];
-                            bindingListView.currentBinding.event = event;
+                            if (bindingListView.currentBinding) {
+                                bindingListView.currentBinding.event = event;
+                            }
                         }
                     }
 
-                    Controls.TextField {
-                        id: shellTextField
-                        Kirigami.FormData.label: "Shell:"
-                        placeholderText: presetManager.currentPreset.shell
+                    Kirigami.Separator {
+                        Kirigami.FormData.isSection: true
+                        visible: bindingListView.model.count != 0
+                        Kirigami.FormData.label: qsTr("Execution Settings")
+                    }
+
+                    Controls.CheckBox {
+                        id: useShellCheckBox
+                        visible: bindingListView.model.count != 0
+                        Kirigami.FormData.label: qsTr("Run in preset shell:")
+                        checked: bindingListView.currentBinding.useShell
                     }
 
                     Controls.TextArea {
                         id: cmdTextArea
+                        visible: bindingListView.model.count != 0
                         Layout.fillWidth: true
                         wrapMode: TextEdit.WordWrap
                         Kirigami.FormData.label: qsTr("Execute Command:")
                         Kirigami.FormData.labelAlignment: Qt.AlignCenter
                         text: bindingListView.currentBinding.cmd
                     }
+                    
                 }
 
                 Kirigami.Separator {
@@ -236,6 +255,14 @@ Kirigami.ApplicationWindow {
                     Controls.Button {
                         text: qsTr("Apply")
                         icon.name: "dialog-ok-apply"
+                        onClicked: {
+                            const binding = bindingListView.currentBinding;
+                            binding.key = keyTextField.text;
+                            binding.desc = descTextField.text;
+                            binding.useShell = useShellCheckBox.checked;
+                            binding.cmd = cmdTextArea.text;
+                            presetManager.savePresets();
+                        }
                     }
                 }
             }

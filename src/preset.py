@@ -1,4 +1,7 @@
-from typing import Any
+import logging
+import shlex
+from subprocess import Popen
+from typing import Any, Self
 
 from PySide6.QtCore import Property, QObject, QProcess, Signal
 
@@ -7,7 +10,7 @@ from binding import Binding
 
 class Preset(QObject):
     nameChanged = Signal()
-    bindingChanged = Signal()
+    bindingsChanged = Signal()
     shellChanged = Signal()
     errorHappened = Signal(str)
 
@@ -17,7 +20,24 @@ class Preset(QObject):
         self.data = data
         self._name = self.initName()
         self._shell, self._shellProcess = self.initShell()
-        self._binding = self.initBinding()
+        self._bindings = self.initBinding()
+
+    @classmethod
+    def sample(cls, parent: QObject | None = None) -> Self:
+        data = {
+            'name': 'New Preset',
+            'shell': '/bin/sh',
+            'bindings': [Binding.sample().toDict()]
+        }
+        preset = cls(data, parent)
+        return preset
+
+    def toDict(self) -> dict[str, Any]:
+        return {
+            'name': self.name,
+            'shell': self.shell,
+            'bindings': [p.toDict() for p in self._bindings]
+        }
 
     @Property(str, notify=nameChanged)  # type: ignore
     def name(self) -> str:  # type: ignore
@@ -37,9 +57,9 @@ class Preset(QObject):
         self._shell = newShell
         self.shellChanged.emit()
 
-    @Property(list, notify=bindingChanged)  # type: ignore
-    def binding(self) -> list[Binding]:
-        return self._binding
+    @Property(list, notify=bindingsChanged)  # type: ignore
+    def bindings(self) -> list[Binding]:
+        return self._bindings
 
     def ensure(self, key: str, data: dict | None = None) -> Any:
         if not data:
@@ -60,6 +80,7 @@ class Preset(QObject):
     def stopShell(self) -> None:
         if self._shellProcess.state() == QProcess.ProcessState.Running:
             self._shellProcess.terminate()
+            self._shellProcess.waitForFinished()
 
     def initBinding(self) -> list[Binding]:
         bindings: list[dict[str, Any]] = self.ensure('bindings')
@@ -69,10 +90,11 @@ class Preset(QObject):
             desc = self.ensure('desc', p)
             cmd = self.ensure('cmd', p)
             event = p.get('event', 'pressed')
-            binding = Binding(key, event, desc, cmd, parent=self)
-            print(binding)
+            useShell = p.get('useShell', True)
+            binding = Binding(key, event, desc, cmd, useShell, parent=self)
+            logging.debug(f'Add binding: {binding}')
             for sig in binding.signals():
-                sig.connect(self.bindingChanged.emit)
+                sig.connect(self.bindingsChanged.emit)
             result.append(binding)
         return result
 
@@ -83,8 +105,11 @@ class Preset(QObject):
         if self._shellProcess.state() != QProcess.ProcessState.Running:
             msg = self.tr(f"Process {self._shell} time out")
             self.errorHappened.emit(msg)
-        for binding in self._binding:
+        for binding in self._bindings:
             if binding.key == key and binding.event == event:
-                print(f'executing {binding._cmd}')
+                logging.debug(f'executing {binding._cmd}')
                 cmd = binding._cmd + '\n'
-                self._shellProcess.write(cmd.encode())
+                if binding.useShell:
+                    self._shellProcess.write(cmd.encode())
+                else:
+                    Popen(shlex.split(f'sh -c "{cmd}"'))
