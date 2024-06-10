@@ -82,6 +82,7 @@ Kirigami.ApplicationWindow {
                 if (index >= bindingListView.model.length) {
                     bindingListView.currentIndex -= 1;
                 }
+                Backend.PresetManager.savePresets();
             }
         }
 
@@ -103,8 +104,6 @@ Kirigami.ApplicationWindow {
                     property var currentBinding: model[currentIndex]
 
                     delegate: Controls.ItemDelegate {
-                        required property string key
-                        required property string cmd
                         required property string desc
                         required property int index
 
@@ -119,102 +118,91 @@ Kirigami.ApplicationWindow {
 
             Kirigami.Separator {
                 Layout.fillHeight: true
+                Layout.margins: 0;
             }
 
-            ColumnLayout {
+            Kirigami.FormLayout {
                 Layout.fillHeight: true
-                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.mediumSpacing
+                Layout.rightMargin: Kirigami.Units.mediumSpacing
 
-                Kirigami.FormLayout {
-                    Layout.fillHeight: true
-                    Layout.leftMargin: Kirigami.Units.mediumSpacing
-                    Layout.rightMargin: Kirigami.Units.mediumSpacing
+                Kirigami.Separator {
+                    Kirigami.FormData.isSection: true
+                    Kirigami.FormData.label: qsTr("Binding Settings")
+                }
 
-                    Kirigami.Separator {
-                        Kirigami.FormData.isSection: true
-                        Kirigami.FormData.label: qsTr("Binding Settings")
-                    }
-
-                    Controls.TextField {
-                        id: descTextField
-                        Kirigami.FormData.label: qsTr("Description:")
-                        text: bindingListView.currentBinding.desc
-                    }
-
-                    Controls.TextField {
-                        id: keyTextField
-                        Kirigami.FormData.label: qsTr("Key:")
-                        text: bindingListView.currentBinding.key
-                    }
-
-                    Controls.ComboBox {
-                        id: eventComboBox
-                        Kirigami.FormData.label: qsTr("Triggered when:")
-                        Layout.fillWidth: true
-                        model: [qsTr("Pressed"), qsTr("Released")]
-                        currentIndex: {
-                            switch (bindingListView.currentBinding.event) {
-                            case "pressed":
-                                return 0;
-                            case "released":
-                                return 1;
-                            default:
-                                return -1;
-                            }
+                Controls.TextField {
+                    id: descTextField
+                    Kirigami.FormData.label: qsTr("Description:")
+                    text: bindingListView.currentBinding.desc
+                    onTextChanged: {
+                        if (bindingListView.currentBinding) {
+                            bindingListView.currentBinding.desc = text;
+                            bindingListView.currentItem.text = text;
                         }
-                        onCurrentIndexChanged: {
+                    }
+                }
+
+                Controls.TextField {
+                    id: keyTextField
+                    Kirigami.FormData.label: qsTr("Key:")
+                    text: bindingListView.currentBinding.key
+                    onTextChanged: {
+                        if (bindingListView.currentBinding) {
+                            bindingListView.currentBinding.key = text;
+                        }
+                    }
+                }
+
+                Controls.ComboBox {
+                    id: eventComboBox
+                    Kirigami.FormData.label: qsTr("Triggered when:")
+                    Layout.fillWidth: true
+                    model: [qsTr("Pressed"), qsTr("Released")]
+                    currentIndex: {
+                        switch (bindingListView.currentBinding.event) {
+                        case "pressed":
+                            return 0;
+                        case "released":
+                            return 1;
+                        default:
+                            return -1;
+                        }
+                    }
+                    onCurrentIndexChanged: {
+                        if (bindingListView.currentBinding) {
                             const event = model[currentIndex];
-                            if (bindingListView.currentBinding) {
-                                bindingListView.currentBinding.event = event;
-                            }
+                            bindingListView.currentBinding.event = event;
                         }
-                    }
-
-                    Kirigami.Separator {
-                        Kirigami.FormData.isSection: true
-                        Kirigami.FormData.label: qsTr("Execution Settings")
-                    }
-
-                    Controls.CheckBox {
-                        id: useShellCheckBox
-                        Kirigami.FormData.label: qsTr("Run in preset shell:")
-                        checked: bindingListView.currentBinding.useShell
-                    }
-
-                    Controls.TextArea {
-                        id: cmdTextArea
-                        Layout.fillWidth: true
-                        wrapMode: TextEdit.WordWrap
-                        Kirigami.FormData.label: qsTr("Execute Command:")
-                        Kirigami.FormData.labelAlignment: Qt.AlignCenter
-                        text: bindingListView.currentBinding.cmd
                     }
                 }
 
                 Kirigami.Separator {
-                    Layout.fillWidth: true
+                    Kirigami.FormData.isSection: true
+                    Kirigami.FormData.label: qsTr("Execution Settings")
                 }
 
-                RowLayout {
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    Layout.rightMargin: Kirigami.Units.smallSpacing
-                    Layout.bottomMargin: Kirigami.Units.smallSpacing
-
-                    Controls.Button {
-                        text: qsTr("Reset")
-                        icon.name: "document-cleanup"
+                Controls.CheckBox {
+                    id: useShellCheckBox
+                    Kirigami.FormData.label: qsTr("Run in preset shell:")
+                    checked: bindingListView.currentBinding.useShell
+                    onToggled: {
+                        if (bindingListView.currentBinding) {
+                            bindingListView.currentBinding.useShell = checked;
+                        }
                     }
+                }
 
-                    Controls.Button {
-                        text: qsTr("Apply")
-                        icon.name: "dialog-ok-apply"
-                        onClicked: {
-                            const binding = bindingListView.currentBinding;
-                            binding.key = keyTextField.text;
-                            binding.desc = descTextField.text;
-                            binding.useShell = useShellCheckBox.checked;
-                            binding.cmd = cmdTextArea.text;
-                            Backend.PresetManager.savePresets();
+                Controls.TextArea {
+                    id: cmdTextArea
+                    Layout.fillWidth: true
+                    wrapMode: TextEdit.WordWrap
+                    Kirigami.FormData.label: qsTr("Execute Command:")
+                    Kirigami.FormData.labelAlignment: Qt.AlignCenter
+                    text: bindingListView.currentBinding.cmd
+                    onTextChanged: {
+                        if (bindingListView.currentBinding) {
+                            bindingListView.currentBinding.cmd = text;
                         }
                     }
                 }

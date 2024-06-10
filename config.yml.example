@@ -17,7 +17,7 @@
     - key: KEY_SPACE
       desc: Double tap at center
       useShell: false
-      cmd: ydotool click -r 2 0xC0 &
+      cmd: input tap 960 540 & sleep 0.1; input tap 960 540 &
 
 - name: Alto's Odyssey
   shell: adb shell
@@ -25,20 +25,14 @@
     - key: KEY_SPACE
       event: pressed
       desc: Press on center
-      cmd: |
-        sendevent /dev/input/event2 3 0 960
-        sendevent /dev/input/event2 3 1 540
-        sendevent /dev/input/event2 1 330 1
-        sendevent /dev/input/event2 0 0 0
+      cmd: input motionevent DOWN 960 540 &
     - key: KEY_SPACE
       event: released
       desc: Release from center
-      cmd: |
-        sendevent /dev/input/event2 1 330 0
-        sendevent /dev/input/event2 0 0 0
+      cmd: input motionevent UP 960 540 &
     - key: KEY_UP
       desc: Activate wingsuit
-      cmd: input tap 50 540
+      cmd: input tap 50 540 &
 
 - name: Test Preset
   bindings:

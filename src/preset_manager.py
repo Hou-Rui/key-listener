@@ -43,6 +43,7 @@ class PresetManager(QObject):
                 for p in data:
                     preset = Preset(p, self)
                     preset.errorHappened.connect(self.errorHappened.emit)
+                    preset.bindingsChanged.connect(self.savePresets)
                     result.append(preset)
                 return result
         except OSError as err:
