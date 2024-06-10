@@ -27,7 +27,7 @@ def main() -> None:
     if "QT_QUICK_CONTROLS_STYLE" not in os.environ:
         os.environ["QT_QUICK_CONTROLS_STYLE"] = "org.kde.desktop"
 
-    engine.load(Path(__file__).parent / "qml" / "main.qml")
+    engine.load(Path(__file__).parent / "qml" / "MainView.qml")
 
     if not engine.rootObjects():
         exit(-1)

@@ -3,7 +3,7 @@ import shlex
 from subprocess import Popen
 from typing import Any, Self
 
-from PySide6.QtCore import Property, QObject, QProcess, Signal
+from PySide6.QtCore import Property, QObject, QProcess, Signal, Slot
 
 from binding import Binding
 
@@ -61,6 +61,11 @@ class Preset(QObject):
     @Property(list, notify=bindingsChanged)  # type: ignore
     def bindings(self) -> list[Binding]:
         return self._bindings
+
+    @Slot(int)
+    def removeBindingAtIndex(self, index: int):
+        self._bindings.pop(index)
+        self.bindingsChanged.emit()
 
     def ensure(self, key: str, data: dict | None = None) -> Any:
         if not data:

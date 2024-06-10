@@ -5,6 +5,9 @@
         "src/preset.py",
         "src/preset_manager.py",
         "src/event_listener.py",
-        "src/qml/main.qml"
+        "src/qml/qmldir",
+        "src/qml/main.qml",
+        "src/qml/Constants.qml",
+        "src/qml/presetDrawer.qml"
     ]
 }

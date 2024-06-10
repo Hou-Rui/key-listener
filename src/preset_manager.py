@@ -3,7 +3,7 @@ from typing import Iterable
 
 import yaml
 from PySide6.QtCore import Property, QObject, QStandardPaths, Signal, Slot
-from PySide6.QtQml import QmlElement
+from PySide6.QtQml import QmlElement, QmlSingleton
 
 from preset import Preset
 
@@ -12,6 +12,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 @QmlElement
+@QmlSingleton
 class PresetManager(QObject):
     currentPresetChanged = Signal()
     errorHappened = Signal(str)
@@ -85,6 +86,11 @@ class PresetManager(QObject):
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list[str]:
         return [p.key for p in self.currentPreset.bindings]
+
+    @Slot(int)
+    def removeBindingAtIndex(self, index: int) -> None:
+        print(f'removing index {index}')
+        self.currentPreset.removeBindingAtIndex(index)
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> None:

@@ -12,65 +12,19 @@ Kirigami.ApplicationWindow {
     visible: true
     title: qsTr("Key Listener")
 
-    readonly property int columnWidth: 12 * Kirigami.Units.gridUnit
-    readonly property int rowItemHeight: 2 * Kirigami.Units.gridUnit
+    pageStack.defaultColumnWidth: Constants.columnWidth
+    wideScreen: width >= 3 * Constants.columnWidth
+    minimumWidth: 2 * Constants.columnWidth
 
-    pageStack.defaultColumnWidth: columnWidth
-    wideScreen: width >= 3 * columnWidth
-    minimumWidth: 2 * columnWidth
-
-    width: 40 * Kirigami.Units.gridUnit
-    height: 30 * Kirigami.Units.gridUnit
+    width: Constants.windowWidth
+    height: Constants.windowHeight
 
     function showMessage(message: string) {
         root.hidePassiveNotification();
         root.showPassiveNotification(message);
     }
 
-    globalDrawer: Kirigami.GlobalDrawer {
-        id: presetsDrawer
-        modal: true
-        width: root.columnWidth
-
-        contentItem: ColumnLayout {
-            Layout.margins: Kirigami.Units.mediumSpacing
-
-            Kirigami.Heading {
-                text: qsTr("Presets")
-                level: 2
-            }
-
-            ListView {
-                id: presetListView
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-
-                reuseItems: true
-                model: presetManager.getPresets()
-
-                onCurrentIndexChanged: {
-                    if (eventListener.isListening) {
-                        eventListener.stopListening();
-                        root.showMessage(qsTr("Listener has stopped due to switching preset"));
-                    }
-                    presetManager.currentPresetIndex = currentIndex;
-                }
-
-                delegate: Controls.ItemDelegate {
-                    required property string name
-                    required property int index
-
-                    height: root.rowItemHeight
-                    width: presetListView.width
-                    text: name
-                    padding: Kirigami.Units.smallSpacing
-
-                    highlighted: ListView.isCurrentItem
-                    onClicked: presetListView.currentIndex = index
-                }
-            }
-        }
-    }
+    globalDrawer: PresetsDrawer {}
 
     pageStack.initialPage: Kirigami.Page {
         title: qsTr("Key Listener")
@@ -81,11 +35,11 @@ Kirigami.ApplicationWindow {
                 id: actionStartListener
                 icon.name: "media-playback-start"
                 text: qsTr("Start")
-                visible: !eventListener.isListening
+                visible: !Backend.EventListener.isListening
                 displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
-                    const keys = presetManager.getCurrentListenedKeys();
-                    eventListener.startListening(keys);
+                    const keys = Backend.PresetManager.getCurrentListenedKeys();
+                    Backend.EventListener.startListening(keys);
                     root.showMessage(qsTr("Listener has started"));
                 }
             },
@@ -93,10 +47,10 @@ Kirigami.ApplicationWindow {
                 id: actionStopListener
                 icon.name: "media-playback-stop"
                 text: qsTr("Stop")
-                visible: eventListener.isListening
+                visible: Backend.EventListener.isListening
                 displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
-                    eventListener.stopListening();
+                    Backend.EventListener.stopListening();
                     root.showMessage(qsTr("Listener has stopped"));
                 }
             },
@@ -121,7 +75,14 @@ Kirigami.ApplicationWindow {
                 return qsTr(`The binding "${binding.desc}" will be removed.`);
             }
             standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
-            // onAccepted: document.save()
+            onAccepted: {
+                const index = bindingListView.currentIndex;
+                Backend.PresetManager.removeBindingAtIndex(index);
+                bindingListView.currentIndex = index;
+                if (index >= bindingListView.model.length) {
+                    bindingListView.currentIndex -= 1;
+                }
+            }
         }
 
         RowLayout {
@@ -130,7 +91,7 @@ Kirigami.ApplicationWindow {
 
             Controls.ScrollView {
                 Layout.fillHeight: true
-                Layout.preferredWidth: root.columnWidth
+                Layout.preferredWidth: Constants.columnWidth
                 Layout.topMargin: Kirigami.Units.smallSpacing
                 Layout.bottomMargin: Kirigami.Units.smallSpacing
                 clip: true
@@ -138,7 +99,7 @@ Kirigami.ApplicationWindow {
                 ListView {
                     id: bindingListView
                     reuseItems: true
-                    model: presetManager.currentPreset.bindings
+                    model: Backend.PresetManager.currentPreset.bindings
                     property var currentBinding: model[currentIndex]
 
                     delegate: Controls.ItemDelegate {
@@ -149,7 +110,7 @@ Kirigami.ApplicationWindow {
 
                         text: desc
                         width: bindingListView.width
-                        height: root.rowItemHeight
+                        height: Constants.rowItemHeight
                         highlighted: ListView.isCurrentItem
                         onClicked: bindingListView.currentIndex = index
                     }
@@ -170,28 +131,24 @@ Kirigami.ApplicationWindow {
                     Layout.rightMargin: Kirigami.Units.mediumSpacing
 
                     Kirigami.Separator {
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.isSection: true
                         Kirigami.FormData.label: qsTr("Binding Settings")
                     }
 
                     Controls.TextField {
                         id: descTextField
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Description:")
                         text: bindingListView.currentBinding.desc
                     }
 
                     Controls.TextField {
                         id: keyTextField
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Key:")
                         text: bindingListView.currentBinding.key
                     }
 
                     Controls.ComboBox {
                         id: eventComboBox
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Triggered when:")
                         Layout.fillWidth: true
                         model: [qsTr("Pressed"), qsTr("Released")]
@@ -215,20 +172,17 @@ Kirigami.ApplicationWindow {
 
                     Kirigami.Separator {
                         Kirigami.FormData.isSection: true
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Execution Settings")
                     }
 
                     Controls.CheckBox {
                         id: useShellCheckBox
-                        visible: bindingListView.model.count != 0
                         Kirigami.FormData.label: qsTr("Run in preset shell:")
                         checked: bindingListView.currentBinding.useShell
                     }
 
                     Controls.TextArea {
                         id: cmdTextArea
-                        visible: bindingListView.model.count != 0
                         Layout.fillWidth: true
                         wrapMode: TextEdit.WordWrap
                         Kirigami.FormData.label: qsTr("Execute Command:")
@@ -260,7 +214,7 @@ Kirigami.ApplicationWindow {
                             binding.desc = descTextField.text;
                             binding.useShell = useShellCheckBox.checked;
                             binding.cmd = cmdTextArea.text;
-                            presetManager.savePresets();
+                            Backend.PresetManager.savePresets();
                         }
                     }
                 }
@@ -269,8 +223,8 @@ Kirigami.ApplicationWindow {
     }
 
     function cleanClose() {
-        eventListener.cleanUp();
-        presetManager.cleanUp();
+        Backend.EventListener.cleanUp();
+        Backend.PresetManager.cleanUp();
         root.close();
     }
 
@@ -283,7 +237,7 @@ Kirigami.ApplicationWindow {
     }
 
     onClosing: close => {
-        if (eventListener.isListening) {
+        if (Backend.EventListener.isListening) {
             close.accepted = false;
             confirmCloseDialog.visible = true;
         } else {
@@ -291,22 +245,22 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    Backend.PresetManager {
-        id: presetManager
-        onErrorHappened: error => {
+    Connections {
+        target: Backend.PresetManager
+        function onErrorHappened(error) {
             root.showMessage(error);
         }
     }
 
-    Backend.EventListener {
-        id: eventListener
-        onKeyPressed: key => {
+    Connections {
+        target: Backend.EventListener
+        function onKeyPressed(key: string) {
             root.showMessage(qsTr(`Key pressed: ${key}`));
-            presetManager.execKeyPressCommand(key);
+            Backend.PresetManager.execKeyPressCommand(key);
         }
-        onKeyReleased: key => {
+        function onKeyReleased(key: string) {
             root.showMessage(qsTr(`Key released: ${key}`));
-            presetManager.execKeyReleaseCommand(key);
+            Backend.PresetManager.execKeyReleaseCommand(key);
         }
     }
 }

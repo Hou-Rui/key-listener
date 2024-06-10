@@ -4,7 +4,7 @@ import os
 import evdev
 from evdev.ecodes import ecodes
 from PySide6.QtCore import Property, QObject, QThread, Signal, Slot
-from PySide6.QtQml import QmlElement
+from PySide6.QtQml import QmlElement, QmlSingleton
 from qasync import QEventLoop
 
 QML_IMPORT_NAME = "keylistener.backend"
@@ -15,6 +15,7 @@ EVDEV_PATH = "/dev/input"
 
 
 @QmlElement
+@QmlSingleton
 class EventListener(QObject):
     keyPressed = Signal(str)
     keyReleased = Signal(str)
