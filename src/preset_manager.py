@@ -92,6 +92,7 @@ class PresetManager(QObject):
     def removeBindingAtIndex(self, index: int) -> None:
         print(f'removing index {index}')
         self.currentPreset.removeBindingAtIndex(index)
+        self.savePresets()
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> None:

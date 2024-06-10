@@ -8,6 +8,8 @@
         "src/qml/qmldir",
         "src/qml/main.qml",
         "src/qml/Constants.qml",
-        "src/qml/presetDrawer.qml"
+        "src/qml/presetDrawer.qml",
+        "src/qml/BindingsListPage.qml",
+        "/src/qml/FormPage.qml"
     ]
 }
