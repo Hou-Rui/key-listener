@@ -28,12 +28,12 @@ Kirigami.ApplicationWindow {
         id: bindingListPage
     }
 
-    FormPage {
-        id: formPage
+    BindingFormPage {
+        id: bindingBindingFormPage
         binding: bindingListPage.currentBinding
     }
 
-    pageStack.initialPage: [bindingListPage, formPage]
+    pageStack.initialPage: [bindingListPage, bindingBindingFormPage]
 
     function cleanClose() {
         Backend.EventListener.cleanUp();

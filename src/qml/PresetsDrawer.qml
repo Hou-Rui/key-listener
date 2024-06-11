@@ -8,9 +8,9 @@ import org.kde.kirigami as Kirigami
 import "../../keylistener/backend" as Backend
 
 Kirigami.GlobalDrawer {
+    id: presetsDrawer
     modal: true
     width: Constants.columnWidth
-    id: presetsDrawer
 
     contentItem: ColumnLayout {
         Layout.margins: Kirigami.Units.mediumSpacing

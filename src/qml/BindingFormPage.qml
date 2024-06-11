@@ -8,7 +8,7 @@ import org.kde.kirigami as Kirigami
 import "../../keylistener/backend" as Backend
 
 Kirigami.ScrollablePage {
-    id: formPage
+    id: page
     title: qsTr("Settings")
     required property var binding
 
@@ -38,6 +38,7 @@ Kirigami.ScrollablePage {
 
     Kirigami.FormLayout {
         anchors.fill: parent
+        enabled: !Backend.EventListener.isListening
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
@@ -47,24 +48,27 @@ Kirigami.ScrollablePage {
         Controls.TextField {
             id: descTextField
             Kirigami.FormData.label: qsTr("Description:")
-            text: formPage.binding.desc
-            onEditingFinished: formPage.binding.desc = text
+
+            text: page.binding.desc
+            onEditingFinished: page.binding.desc = text
         }
 
         Controls.TextField {
             id: keyTextField
             Kirigami.FormData.label: qsTr("Key:")
-            text: formPage.binding.key
-            onEditingFinished: formPage.binding.key = text
+
+            text: page.binding.key
+            onEditingFinished: page.binding.key = text
         }
 
         Controls.ComboBox {
             id: eventComboBox
             Kirigami.FormData.label: qsTr("Triggered when:")
+
             Layout.fillWidth: true
             model: [qsTr("Pressed"), qsTr("Released")]
             currentIndex: {
-                switch (formPage.binding.event) {
+                switch (page.binding.event) {
                 case "pressed":
                     return 0;
                 case "released":
@@ -73,7 +77,7 @@ Kirigami.ScrollablePage {
                     return -1;
                 }
             }
-            onActivated: index => formPage.binding.event = model[index]
+            onActivated: index => page.binding.event = model[index]
         }
 
         Kirigami.Separator {
@@ -84,18 +88,20 @@ Kirigami.ScrollablePage {
         Controls.CheckBox {
             id: useShellCheckBox
             Kirigami.FormData.label: qsTr("Run in preset shell:")
-            checked: formPage.binding.useShell
-            onToggled: formPage.binding.useShell = checked
+
+            checked: page.binding.useShell
+            onToggled: page.binding.useShell = checked
         }
 
         Controls.TextArea {
             id: cmdTextArea
+            Kirigami.FormData.label: qsTr("Execute Command:")
+
             Layout.fillWidth: true
             wrapMode: TextEdit.WordWrap
-            Kirigami.FormData.label: qsTr("Execute Command:")
             Kirigami.FormData.labelAlignment: Qt.AlignCenter
-            text: formPage.binding.cmd
-            onEditingFinished: formPage.binding.cmd = text
+            text: page.binding.cmd
+            onEditingFinished: page.binding.cmd = text
         }
     }
 }
