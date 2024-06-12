@@ -16,7 +16,7 @@ Kirigami.ScrollablePage {
         Kirigami.Action {
             id: actionStartListener
             icon.name: "media-playback-start"
-            text: qsTr("Start")
+            text: qsTr("Start Listening")
             visible: !Backend.EventListener.isListening
             displayHint: Kirigami.DisplayHint.KeepVisible
             onTriggered: {
@@ -27,7 +27,7 @@ Kirigami.ScrollablePage {
         Kirigami.Action {
             id: actionStopListener
             icon.name: "media-playback-stop"
-            text: qsTr("Stop")
+            text: qsTr("Stop Listening")
             visible: Backend.EventListener.isListening
             displayHint: Kirigami.DisplayHint.KeepVisible
             onTriggered: {
@@ -63,7 +63,7 @@ Kirigami.ScrollablePage {
 
         Controls.ComboBox {
             id: eventComboBox
-            Kirigami.FormData.label: qsTr("Triggered when:")
+            Kirigami.FormData.label: qsTr("Triggered When:")
 
             Layout.fillWidth: true
             model: [qsTr("Pressed"), qsTr("Released")]
@@ -87,7 +87,7 @@ Kirigami.ScrollablePage {
 
         Controls.CheckBox {
             id: useShellCheckBox
-            Kirigami.FormData.label: qsTr("Run in preset shell:")
+            Kirigami.FormData.label: qsTr("Run in Preset Shell:")
 
             checked: page.binding.useShell
             onToggled: page.binding.useShell = checked

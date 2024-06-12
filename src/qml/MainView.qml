@@ -44,7 +44,7 @@ Kirigami.ApplicationWindow {
     Kirigami.PromptDialog {
         id: confirmCloseDialog
         title: qsTr("Exit Key Listener?")
-        subtitle: qsTr("All current bindings will be stopped.")
+        subtitle: qsTr("\nAll current bindings will be stopped.")
         standardButtons: Kirigami.Dialog.Yes | Kirigami.Dialog.No
         onAccepted: root.cleanClose()
     }

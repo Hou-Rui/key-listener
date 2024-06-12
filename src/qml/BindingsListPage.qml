@@ -12,24 +12,22 @@ Kirigami.ScrollablePage {
 
     actions: [
         Kirigami.Action {
-            id: actionAddListener
             icon.name: "list-add"
-            text: qsTr("Add")
+            text: qsTr("Add Binding")
         },
         Kirigami.Action {
-            id: actionRemoveListener
             icon.name: "list-remove"
-            text: qsTr("Remove")
+            text: qsTr("Remove Binding")
             onTriggered: removeBindingDialog.visible = true
         }
     ]
 
     Kirigami.PromptDialog {
         id: removeBindingDialog
-        title: qsTr("Confirm Removal?")
+        title: qsTr("Remove Selected Binding")
         subtitle: {
             const binding = bindingListView.currentBinding;
-            return qsTr(`The binding "${binding.desc}" will be removed.`);
+            return qsTr(`\nThe binding "${binding.desc}" will be removed.`);
         }
         standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
         onAccepted: {
