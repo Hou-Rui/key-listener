@@ -88,6 +88,12 @@ class PresetManager(QObject):
     def getCurrentListenedKeys(self) -> list[tuple[str, str]]:
         return [(p.key, p.event) for p in self.currentPreset.bindings]
 
+    @Slot(result=int)
+    def addNewBinding(self) -> int:
+        index = self.currentPreset.addNewBinding()
+        self.savePresets()
+        return index
+
     @Slot(int)
     def removeBindingAtIndex(self, index: int) -> None:
         print(f'removing index {index}')

@@ -14,6 +14,7 @@ Kirigami.ScrollablePage {
         Kirigami.Action {
             icon.name: "list-add"
             text: qsTr("Add Binding")
+            onTriggered: bindingListView.currentIndex = Backend.PresetManager.addNewBinding()
         },
         Kirigami.Action {
             icon.name: "list-remove"
@@ -27,15 +28,16 @@ Kirigami.ScrollablePage {
         title: qsTr("Remove Selected Binding")
         subtitle: {
             const binding = bindingListView.currentBinding;
-            return qsTr(`\nThe binding "${binding.desc}" will be removed.`);
+            return qsTr(`The binding "${binding.desc}" will be removed.`);
         }
         standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
         onAccepted: {
             const index = bindingListView.currentIndex;
             Backend.PresetManager.removeBindingAtIndex(index);
-            bindingListView.currentIndex = index;
             if (index >= bindingListView.model.length) {
-                bindingListView.currentIndex -= 1;
+                bindingListView.currentIndex = index - 1;
+            } else {
+                bindingListView.currentIndex = index;
             }
         }
     }
