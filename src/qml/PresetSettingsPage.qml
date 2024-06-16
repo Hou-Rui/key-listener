@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
+import "../../keylistener/backend" as Backend
+
 Kirigami.ScrollablePage {
     id: page
     title: qsTr("Settings")
@@ -27,10 +29,11 @@ Kirigami.ScrollablePage {
 
     Kirigami.FormLayout {
         anchors.fill: parent
+        enabled: !Backend.EventListener.isListening
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: qsTr("Settings")
+            Kirigami.FormData.label: qsTr("Preset Settings")
         }
 
         Controls.TextField {

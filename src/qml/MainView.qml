@@ -77,7 +77,7 @@ Kirigami.ApplicationWindow {
 
     Connections {
         target: Backend.PresetManager
-        function onErrorHappened(error) {
+        function onErrorHappened(error: string) {
             root.showMessage(error);
         }
     }
