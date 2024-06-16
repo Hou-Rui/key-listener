@@ -32,8 +32,6 @@ Kirigami.ApplicationWindow {
         onEditBindingsRequested: {
             root.pageStack.push(bindingsListPage);
             root.pageStack.push(bindingSettingsPage);
-            presetsListPage.visible = false;
-            presetSettingsPage.visible = false;
         }
     }
 
@@ -47,11 +45,10 @@ Kirigami.ApplicationWindow {
         onEditPresetsRequested: {
             root.pageStack.pop();
             root.pageStack.pop();
-            presetsListPage.visible = true;
-            presetSettingsPage.visible = true;
         }
     }
 
+    pageStack.interactive: false
     pageStack.initialPage: [
         presetsListPage,
         presetSettingsPage,

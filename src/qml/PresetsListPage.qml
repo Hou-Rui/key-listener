@@ -14,11 +14,13 @@ Kirigami.ScrollablePage {
         Kirigami.Action {
             icon.name: "list-add"
             text: qsTr("Add Preset")
+            displayHint: Kirigami.DisplayHint.AlwaysHide
             // onTriggered: bindingListView.currentIndex = Backend.PresetManager.addNewBinding()
         },
         Kirigami.Action {
             icon.name: "list-remove"
             text: qsTr("Remove Preset")
+            displayHint: Kirigami.DisplayHint.AlwaysHide
             // onTriggered: removeBindingDialog.visible = true
         }
     ]
