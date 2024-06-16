@@ -22,23 +22,45 @@ Kirigami.ApplicationWindow {
         root.showPassiveNotification(message);
     }
 
-    globalDrawer: PresetsDrawer {}
+    PresetsListPage {
+        id: presetsListPage
+    }
+
+    PresetSettingsPage {
+        id: presetSettingsPage
+        preset: Backend.PresetManager.currentPreset
+        onEditBindingsRequested: {
+            root.pageStack.push(bindingsListPage);
+            root.pageStack.push(bindingSettingsPage);
+            presetsListPage.visible = false;
+            presetSettingsPage.visible = false;
+        }
+    }
 
     BindingsListPage {
-        id: bindingListPage
+        id: bindingsListPage
     }
 
-    BindingFormPage {
-        id: bindingBindingFormPage
-        binding: bindingListPage.currentBinding
+    BindingSettingsPage {
+        id: bindingSettingsPage
+        binding: bindingsListPage.currentBinding
+        onEditPresetsRequested: {
+            root.pageStack.pop();
+            root.pageStack.pop();
+            presetsListPage.visible = true;
+            presetSettingsPage.visible = true;
+        }
     }
 
-    pageStack.initialPage: [bindingListPage, bindingBindingFormPage]
+    pageStack.initialPage: [
+        presetsListPage,
+        presetSettingsPage,
+    ]
 
     function cleanClose() {
         Backend.EventListener.cleanUp();
         Backend.PresetManager.cleanUp();
-        root.close();
+        root.quitAction.trigger();
     }
 
     Kirigami.PromptDialog {

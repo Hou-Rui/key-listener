@@ -11,10 +11,10 @@ Kirigami.ScrollablePage {
     id: page
     title: qsTr("Settings")
     required property var binding
+    signal editPresetsRequested
 
     actions: [
         Kirigami.Action {
-            id: actionStartListener
             icon.name: "media-playback-start"
             text: qsTr("Start Listening")
             visible: !Backend.EventListener.isListening
@@ -25,14 +25,17 @@ Kirigami.ScrollablePage {
             }
         },
         Kirigami.Action {
-            id: actionStopListener
             icon.name: "media-playback-stop"
             text: qsTr("Stop Listening")
             visible: Backend.EventListener.isListening
             displayHint: Kirigami.DisplayHint.KeepVisible
-            onTriggered: {
-                Backend.EventListener.stopListening();
-            }
+            onTriggered: Backend.EventListener.stopListening()
+        },
+        Kirigami.Action {
+            icon.name: "document-edit"
+            text: qsTr("Edit Presets")
+            displayHint: Kirigami.DisplayHint.KeepVisible
+            onTriggered: page.editPresetsRequested()
         }
     ]
 
@@ -48,7 +51,6 @@ Kirigami.ScrollablePage {
         Controls.TextField {
             id: descTextField
             Kirigami.FormData.label: qsTr("Description:")
-
             text: page.binding.desc
             onEditingFinished: page.binding.desc = text
         }
@@ -64,7 +66,6 @@ Kirigami.ScrollablePage {
         Controls.ComboBox {
             id: eventComboBox
             Kirigami.FormData.label: qsTr("Triggered When:")
-
             Layout.fillWidth: true
             model: [qsTr("Pressed"), qsTr("Released")]
             currentIndex: {
@@ -85,10 +86,9 @@ Kirigami.ScrollablePage {
             Kirigami.FormData.label: qsTr("Execution Settings")
         }
 
-        Controls.CheckBox {
-            id: useShellCheckBox
+        Controls.Switch {
+            id: useShellSwitch
             Kirigami.FormData.label: qsTr("Run in Preset Shell:")
-
             checked: page.binding.useShell
             onToggled: page.binding.useShell = checked
         }
@@ -96,7 +96,6 @@ Kirigami.ScrollablePage {
         Controls.TextArea {
             id: cmdTextArea
             Kirigami.FormData.label: qsTr("Execute Command:")
-
             Layout.fillWidth: true
             wrapMode: TextEdit.WordWrap
             Kirigami.FormData.labelAlignment: Qt.AlignCenter
