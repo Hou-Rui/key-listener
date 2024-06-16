@@ -57,7 +57,7 @@ Kirigami.ScrollablePage {
 
             text: desc
             width: bindingListView.width
-            height: Constants.rowItemHeight
+            height: Utils.constants.rowItemHeight
             highlighted: ListView.isCurrentItem
             onClicked: bindingListView.currentIndex = index
         }

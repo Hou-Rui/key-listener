@@ -8,7 +8,7 @@ import "../../keylistener/backend" as Backend
 
 Kirigami.ScrollablePage {
     title: qsTr("Presets")
-    width: Constants.columnWidth
+    width: Utils.constants.columnWidth
 
     actions: [
         Kirigami.Action {
@@ -43,7 +43,7 @@ Kirigami.ScrollablePage {
             required property string name
             required property int index
 
-            height: Constants.rowItemHeight
+            height: Utils.constants.rowItemHeight
             width: presetListView.width
             text: name
             padding: Kirigami.Units.smallSpacing

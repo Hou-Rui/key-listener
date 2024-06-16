@@ -6,16 +6,23 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.ScrollablePage {
     id: page
-    title: qsTr("Preset Settings")
+    title: qsTr("Settings")
     required property var preset
     signal editBindingsRequested
 
+    Kirigami.Action {
+        id: editAction
+        icon.name: "document-edit"
+        text: qsTr("Edit Bindings")
+        displayHint: Kirigami.DisplayHint.KeepVisible
+        onTriggered: page.editBindingsRequested()
+    }
+
+
     actions: [
-        Kirigami.Action {
-            icon.name: "document-edit"
-            text: qsTr("Edit Bindings")
-            onTriggered: page.editBindingsRequested()
-        }
+        Utils.commonActions.startListeningAction,
+        Utils.commonActions.stopListeningAction,
+        editAction,
     ]
 
     Kirigami.FormLayout {
@@ -23,7 +30,7 @@ Kirigami.ScrollablePage {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: qsTr("Preset Settings")
+            Kirigami.FormData.label: qsTr("Settings")
         }
 
         Controls.TextField {

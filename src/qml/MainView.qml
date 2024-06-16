@@ -10,12 +10,12 @@ Kirigami.ApplicationWindow {
     visible: true
     title: qsTr("Key Listener")
 
-    pageStack.defaultColumnWidth: Constants.columnWidth
-    wideScreen: width >= 3 * Constants.columnWidth
-    minimumWidth: 2 * Constants.columnWidth
+    pageStack.defaultColumnWidth: Utils.constants.columnWidth
+    wideScreen: width >= 3 * Utils.constants.columnWidth
+    minimumWidth: 2 * Utils.constants.columnWidth
 
-    width: Constants.windowWidth
-    height: Constants.windowHeight
+    width: Utils.constants.windowWidth
+    height: Utils.constants.windowHeight
 
     function showMessage(message: string) {
         root.hidePassiveNotification();
@@ -49,10 +49,8 @@ Kirigami.ApplicationWindow {
     }
 
     pageStack.interactive: false
-    pageStack.initialPage: [
-        presetsListPage,
-        presetSettingsPage,
-    ]
+    pageStack.globalToolBar.showNavigationButtons: 0
+    pageStack.initialPage: [presetsListPage, presetSettingsPage]
 
     function cleanClose() {
         Backend.EventListener.cleanUp();

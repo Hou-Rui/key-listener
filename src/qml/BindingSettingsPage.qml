@@ -13,30 +13,18 @@ Kirigami.ScrollablePage {
     required property var binding
     signal editPresetsRequested
 
+    Kirigami.Action {
+        id: editAction
+        icon.name: "document-edit"
+        text: qsTr("Edit Presets")
+        displayHint: Kirigami.DisplayHint.KeepVisible
+        onTriggered: page.editPresetsRequested()
+    }
+
     actions: [
-        Kirigami.Action {
-            icon.name: "media-playback-start"
-            text: qsTr("Start Listening")
-            visible: !Backend.EventListener.isListening
-            displayHint: Kirigami.DisplayHint.KeepVisible
-            onTriggered: {
-                const keys = Backend.PresetManager.getCurrentListenedKeys();
-                Backend.EventListener.startListening(keys);
-            }
-        },
-        Kirigami.Action {
-            icon.name: "media-playback-stop"
-            text: qsTr("Stop Listening")
-            visible: Backend.EventListener.isListening
-            displayHint: Kirigami.DisplayHint.KeepVisible
-            onTriggered: Backend.EventListener.stopListening()
-        },
-        Kirigami.Action {
-            icon.name: "document-edit"
-            text: qsTr("Edit Presets")
-            displayHint: Kirigami.DisplayHint.KeepVisible
-            onTriggered: page.editPresetsRequested()
-        }
+        Utils.commonActions.startListeningAction,
+        Utils.commonActions.stopListeningAction,
+        editAction,
     ]
 
     Kirigami.FormLayout {

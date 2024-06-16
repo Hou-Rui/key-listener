@@ -7,7 +7,7 @@
         "src/event_listener.py",
         "src/qml/qmldir",
         "src/qml/main.qml",
-        "src/qml/Constants.qml",
+        "src/qml/Utils.qml",
         "src/qml/PresetsListPage.qml",
         "src/qml/PresetFormPage.qml",
         "src/qml/BindingsListPage.qml",
