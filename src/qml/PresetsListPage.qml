@@ -8,29 +8,40 @@ import "../../keylistener/backend" as Backend
 
 Kirigami.ScrollablePage {
     title: qsTr("Presets")
-    width: Utils.constants.columnWidth
+    implicitWidth: Utils.constants.columnWidth
 
     actions: [
         Kirigami.Action {
             icon.name: "list-add"
             text: qsTr("Add Preset")
             displayHint: Kirigami.DisplayHint.AlwaysHide
-            // onTriggered: bindingListView.currentIndex = Backend.PresetManager.addNewBinding()
+            onTriggered: Backend.PresetManager.addNewPreset()
         },
         Kirigami.Action {
             icon.name: "list-remove"
             text: qsTr("Remove Preset")
             displayHint: Kirigami.DisplayHint.AlwaysHide
-            // onTriggered: removeBindingDialog.visible = true
+            onTriggered: removePresetDialog.visible = true
         }
     ]
 
+    Kirigami.PromptDialog {
+        id: removePresetDialog
+        title: qsTr("Remove Selected Preset")
+        subtitle: {
+            const preset = Backend.PresetManager.currentPreset
+            return qsTr(`The preset "${preset.name}" will be removed.`);
+        }
+        standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
+        onAccepted: Backend.PresetManager.removeCurrentPreset()
+    }
+
     ListView {
         id: presetListView
-        implicitWidth: parent.width
+        anchors.fill: parent
 
         reuseItems: true
-        model: Backend.PresetManager.getPresets()
+        model: Backend.PresetManager.presets
 
         onCurrentIndexChanged: {
             if (Backend.EventListener.isListening) {

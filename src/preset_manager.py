@@ -14,13 +14,14 @@ QML_IMPORT_MAJOR_VERSION = 1
 @QmlElement
 @QmlSingleton
 class PresetManager(QObject):
+    presetsChanged = Signal()
     currentPresetChanged = Signal()
     errorHappened = Signal(str)
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.path = self.initPath()
-        self.presets = self.initPresets()
+        self._presets = self.initPresets()
         self._currentPresetIndex = 0
 
     def initPath(self) -> str:
@@ -56,7 +57,7 @@ class PresetManager(QObject):
     def savePresets(self):
         try:
             with open(self.path, 'w') as config_file:
-                data = [p.toDict() for p in self.presets]
+                data = [p.toDict() for p in self._presets]
                 config_file.write(yaml.safe_dump(data, sort_keys=False))
         except OSError as err:
             self.errorHappened.emit(self.tr(f'OS error: {err}'))
@@ -73,20 +74,38 @@ class PresetManager(QObject):
         self._currentPresetIndex = newIndex
         self.currentPresetChanged.emit()
 
-    @Slot(result=list)
-    def getPresets(self) -> list[Preset]:
-        return self.presets
+    @Property(list, notify=presetsChanged)  # type: ignore
+    def presets(self) -> list[Preset]:
+        return self._presets
 
     @Property('QVariant', notify=currentPresetChanged)  # type: ignore
     def currentPreset(self) -> Preset:
         if not self.presets:
-            self.presets.append(Preset.sample())
-            self.currentPresetIndex = 0
-        return self.presets[self.currentPresetIndex]
+            self.addNewPreset()
+        return self._presets[self._currentPresetIndex]
 
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list[tuple[str, str]]:
         return [(p.key, p.event) for p in self.currentPreset.bindings]
+    
+    @Slot(result=int)
+    def addNewPreset(self) -> int:
+        self._presets.append(Preset.sample())
+        self.savePresets()
+        self._currentPresetIndex = len(self._presets) - 1
+        self.presetsChanged.emit()
+        self.currentPresetChanged.emit()
+        return self._currentPresetIndex
+    
+    @Slot(result=int)
+    def removeCurrentPreset(self) -> int:
+        self._presets.pop(self._currentPresetIndex)
+        self.savePresets()
+        if self._currentPresetIndex >= len(self._presets):
+            self._currentPresetIndex -= 1
+        self.presetsChanged.emit()
+        self.currentPresetChanged.emit()
+        return self._currentPresetIndex
 
     @Slot(result=int)
     def addNewBinding(self) -> int:
