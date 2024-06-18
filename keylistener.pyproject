@@ -6,11 +6,11 @@
         "src/preset_manager.py",
         "src/event_listener.py",
         "src/qml/qmldir",
-        "src/qml/main.qml",
+        "src/qml/MainView.qml",
         "src/qml/Utils.qml",
         "src/qml/PresetsListPage.qml",
-        "src/qml/PresetFormPage.qml",
+        "src/qml/PresetSettingsPage.qml",
         "src/qml/BindingsListPage.qml",
-        "src/qml/BindingFormPage.qml"
+        "src/qml/BindingSettingsPage.qml"
     ]
 }
