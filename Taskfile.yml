@@ -1,0 +1,16 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - pyside6-project build
+      - ln -sf $(pwd)/keylistener src/qml/keylistener
+  run:
+    cmds:
+      - pyside6-project run
+  clean:
+    cmds:
+      - pyside6-project clean
+      - rm -rf src/qml/keylistener
