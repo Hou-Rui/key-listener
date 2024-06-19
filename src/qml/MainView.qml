@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import org.kde.kirigami as Kirigami
 
-import "../../keylistener/backend" as Backend
+import keylistener.backend as Backend
 
 Kirigami.ApplicationWindow {
     id: root

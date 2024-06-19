@@ -58,7 +58,7 @@ class Preset(QObject):
         self._shell = newShell
         self.shellChanged.emit()
 
-    @Property(list, notify=bindingsChanged)  # type: ignore
+    @Property('QVariantList', notify=bindingsChanged)  # type: ignore
     def bindings(self) -> list[Binding]:
         return self._bindings
 

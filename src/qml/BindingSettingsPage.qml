@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
-import "../../keylistener/backend" as Backend
+import keylistener.backend as Backend
 
 Kirigami.ScrollablePage {
     id: page

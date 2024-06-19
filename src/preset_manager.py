@@ -74,7 +74,7 @@ class PresetManager(QObject):
         self._currentPresetIndex = newIndex
         self.currentPresetChanged.emit()
 
-    @Property(list, notify=presetsChanged)  # type: ignore
+    @Property('QVariantList', notify=presetsChanged)  # type: ignore
     def presets(self) -> list[Preset]:
         return self._presets
 
@@ -87,7 +87,7 @@ class PresetManager(QObject):
     @Slot(result=list)
     def getCurrentListenedKeys(self) -> list[tuple[str, str]]:
         return [(p.key, p.event) for p in self.currentPreset.bindings]
-    
+
     @Slot(result=int)
     def addNewPreset(self) -> int:
         self._presets.append(Preset.sample())
@@ -96,7 +96,7 @@ class PresetManager(QObject):
         self.presetsChanged.emit()
         self.currentPresetChanged.emit()
         return self._currentPresetIndex
-    
+
     @Slot(result=int)
     def removeCurrentPreset(self) -> int:
         self._presets.pop(self._currentPresetIndex)

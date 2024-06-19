@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import org.kde.kirigami as Kirigami
 
-import "../../keylistener/backend" as Backend
+import keylistener.backend as Backend
 
 Item {
     readonly property var constants: Item {
