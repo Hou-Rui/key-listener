@@ -75,7 +75,7 @@ class EventListener(QObject):
             if (key, event) in self.keyEvents and sig is not None:
                 sig.emit(keyEvent.keycode)
 
-    @Property(bool, notify=listeningChanged)  # type: ignore
+    @Property(bool, notify=listeningChanged)
     def isListening(self) -> bool:
         return len(self.tasks) > 0
 

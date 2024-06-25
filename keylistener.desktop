@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Key Listener
+GenericName=Key Listener
+Comment=Configurable key lisnter for X11 and Wayland
+Categories=Utility
+Keywords=game;controller;keyboard;joystick;mouse;
+Exec=keylistener %u
+Icon=keylistener
+StartupWMClass=keylistener
+Terminal=false

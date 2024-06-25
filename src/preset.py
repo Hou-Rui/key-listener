@@ -40,8 +40,8 @@ class Preset(QObject):
             'bindings': [p.toDict() for p in self._bindings]
         }
 
-    @Property(str, notify=nameChanged)  # type: ignore
-    def name(self) -> str:  # type: ignore
+    @Property(str, notify=nameChanged)
+    def name(self) -> str:
         return self._name
 
     @name.setter
@@ -49,8 +49,8 @@ class Preset(QObject):
         self._name = newName
         self.nameChanged.emit()
 
-    @Property(str, notify=shellChanged)  # type: ignore
-    def shell(self) -> str:  # type: ignore
+    @Property(str, notify=shellChanged)
+    def shell(self) -> str:
         return self._shell
 
     @shell.setter
@@ -58,7 +58,7 @@ class Preset(QObject):
         self._shell = newShell
         self.shellChanged.emit()
 
-    @Property('QVariantList', notify=bindingsChanged)  # type: ignore
+    @Property('QVariantList', notify=bindingsChanged)
     def bindings(self) -> list[Binding]:
         return self._bindings
 

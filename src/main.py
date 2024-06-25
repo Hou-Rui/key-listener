@@ -17,8 +17,9 @@ assert EventListener is not None
 
 def main() -> None:
     app = QGuiApplication(sys.argv)
-    app.setApplicationName("KeyListener")
-    app.setApplicationDisplayName("Key Listener")
+    app.setApplicationName("keylistener")
+    app.setDesktopFileName(app.applicationName())
+    app.setApplicationDisplayName(app.tr("Key Listener"))
 
     engine = QQmlApplicationEngine()
 

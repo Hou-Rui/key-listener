@@ -45,8 +45,8 @@ class Binding(QObject):
         return cls(key='KEY_ENTER', event='pressed', desc='New Binding',
                    cmd='', useShell=True, parent=parent)
 
-    @Property(str, notify=keyChanged)  # type: ignore
-    def key(self) -> str:  # type: ignore
+    @Property(str, notify=keyChanged)
+    def key(self) -> str:
         return self._key
 
     @key.setter
@@ -54,8 +54,8 @@ class Binding(QObject):
         self._key = newKey
         self.keyChanged.emit()
 
-    @Property(str, notify=eventChanged)  # type: ignore
-    def event(self) -> str:  # type: ignore
+    @Property(str, notify=eventChanged)
+    def event(self) -> str:
         return self._event
 
     @event.setter
@@ -63,8 +63,8 @@ class Binding(QObject):
         self._event = newKey.lower()
         self.eventChanged.emit()
 
-    @Property(str, notify=descChanged)  # type: ignore
-    def desc(self) -> str:  # type: ignore
+    @Property(str, notify=descChanged)
+    def desc(self) -> str:
         return self._desc
 
     @desc.setter
@@ -72,8 +72,8 @@ class Binding(QObject):
         self._desc = newDesc
         self.descChanged.emit()
 
-    @Property(str, notify=cmdChanged)  # type: ignore
-    def cmd(self) -> str:  # type: ignore
+    @Property(str, notify=cmdChanged)
+    def cmd(self) -> str:
         return self._cmd
 
     @cmd.setter
@@ -81,8 +81,8 @@ class Binding(QObject):
         self._cmd = newCmd
         self.cmdChanged.emit()
 
-    @Property(bool, notify=useShellChanged)  # type: ignore
-    def useShell(self) -> bool:  # type: ignore
+    @Property(bool, notify=useShellChanged)
+    def useShell(self) -> bool:
         return self._useShell
 
     @useShell.setter

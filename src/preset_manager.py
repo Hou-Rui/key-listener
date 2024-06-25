@@ -64,8 +64,8 @@ class PresetManager(QObject):
         except yaml.YAMLError as err:
             self.errorHappened.emit(self.tr(f'YAML error: {err}'))
 
-    @Property(int, notify=currentPresetChanged)  # type: ignore
-    def currentPresetIndex(self) -> int:  # type: ignore
+    @Property(int, notify=currentPresetChanged)
+    def currentPresetIndex(self) -> int:
         return self._currentPresetIndex
 
     @currentPresetIndex.setter
@@ -74,11 +74,11 @@ class PresetManager(QObject):
         self._currentPresetIndex = newIndex
         self.currentPresetChanged.emit()
 
-    @Property('QVariantList', notify=presetsChanged)  # type: ignore
+    @Property('QVariantList', notify=presetsChanged)
     def presets(self) -> list[Preset]:
         return self._presets
 
-    @Property('QVariant', notify=currentPresetChanged)  # type: ignore
+    @Property('QVariant', notify=currentPresetChanged)
     def currentPreset(self) -> Preset:
         if not self.presets:
             self.addNewPreset()
