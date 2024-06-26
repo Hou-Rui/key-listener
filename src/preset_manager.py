@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Iterable
 
-import yaml
+import json
 from PySide6.QtCore import Property, QObject, QStandardPaths, Signal, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
 
@@ -29,7 +29,7 @@ class PresetManager(QObject):
         user_config_dir = QStandardPaths.writableLocation(type)
         config_path = Path(user_config_dir, 'keylistener')
         config_path.mkdir(exist_ok=True)
-        config_file_path = config_path / 'config.yml'
+        config_file_path = config_path / 'config.json'
         if not config_file_path.exists():
             config_file_path.touch()
         return str(config_file_path)
@@ -38,7 +38,7 @@ class PresetManager(QObject):
         try:
             with open(self.path, 'r') as config_file:
                 result = []
-                data = yaml.safe_load(config_file)
+                data = json.load(config_file)
                 if not isinstance(data, Iterable):
                     return []
                 for p in data:
@@ -49,8 +49,8 @@ class PresetManager(QObject):
                 return result
         except OSError as err:
             self.errorHappened.emit(self.tr(f'OS error: {err}'))
-        except yaml.YAMLError as err:
-            self.errorHappened.emit(self.tr(f'YAML error: {err}'))
+        except json.JSONDecodeError as err:
+            self.errorHappened.emit(self.tr(f'JSON error: {err}'))
         return []
 
     @Slot()
@@ -58,11 +58,11 @@ class PresetManager(QObject):
         try:
             with open(self.path, 'w') as config_file:
                 data = [p.toDict() for p in self._presets]
-                config_file.write(yaml.safe_dump(data, sort_keys=False))
+                json.dump(data, config_file, sort_keys=True)
         except OSError as err:
             self.errorHappened.emit(self.tr(f'OS error: {err}'))
-        except yaml.YAMLError as err:
-            self.errorHappened.emit(self.tr(f'YAML error: {err}'))
+        except json.JSONDecodeError as err:
+            self.errorHappened.emit(self.tr(f'JSON error: {err}'))
 
     @Property(int, notify=currentPresetChanged)
     def currentPresetIndex(self) -> int:
