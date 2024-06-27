@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import json
 from PySide6.QtCore import Property, QObject, QStandardPaths, Signal, Slot
@@ -42,9 +42,7 @@ class PresetManager(QObject):
                 if not isinstance(data, Iterable):
                     return []
                 for p in data:
-                    preset = Preset(p, self)
-                    preset.errorHappened.connect(self.errorHappened.emit)
-                    preset.bindingsChanged.connect(self.savePresets)
+                    preset = self.createPreset(p)
                     result.append(preset)
                 return result
         except OSError as err:
@@ -52,6 +50,17 @@ class PresetManager(QObject):
         except json.JSONDecodeError as err:
             self.errorHappened.emit(self.tr(f'JSON error: {err}'))
         return []
+
+    def createPreset(self, data: dict[str, Any]) -> Preset:
+        if data is None:
+            preset = Preset.sample(self)
+        else:
+            preset = Preset(data, self)
+        preset.errorHappened.connect(self.errorHappened.emit)
+        preset.bindingsChanged.connect(self.savePresets)
+        for sig in preset.signals():
+            sig.connect(self.presetsChanged.emit)
+        return preset
 
     @Slot()
     def savePresets(self):
@@ -90,7 +99,7 @@ class PresetManager(QObject):
 
     @Slot(result=int)
     def addNewPreset(self) -> int:
-        self._presets.append(Preset.sample())
+        self._presets.append(self.createPreset(None))
         self.savePresets()
         self._currentPresetIndex = len(self._presets) - 1
         self.presetsChanged.emit()

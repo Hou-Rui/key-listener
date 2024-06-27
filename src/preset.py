@@ -1,9 +1,10 @@
 import logging
 import shlex
 from subprocess import Popen
-from typing import Any, Self
+from typing import Any, Iterable, Self
 
-from PySide6.QtCore import Property, QObject, QProcess, Signal, Slot
+from PySide6.QtCore import (Property, QObject, QProcess,
+                            Signal, Slot, SignalInstance)
 
 from binding import Binding
 
@@ -21,6 +22,9 @@ class Preset(QObject):
         self._name = self.initName()
         self._shell, self._shellProcess = self.initShell()
         self._bindings = self.initBinding()
+
+    def signals(self) -> Iterable[SignalInstance]:
+        return (self.nameChanged, self.shellChanged)
 
     @classmethod
     def sample(cls, parent: QObject | None = None) -> Self:
@@ -47,6 +51,7 @@ class Preset(QObject):
     @name.setter
     def name(self, newName: str) -> None:
         self._name = newName
+        print(f"new name: {newName}")
         self.nameChanged.emit()
 
     @Property(str, notify=shellChanged)
@@ -94,23 +99,26 @@ class Preset(QObject):
             self._shellProcess.terminate()
             self._shellProcess.waitForFinished()
 
-    def initBinding(self) -> list[Binding]:
-        bindings: list[dict[str, Any]] = self.ensure('bindings')
-        if not bindings:
-            return []
-        result = []
-        for p in bindings:
-            key = self.ensure('key', p)
-            desc = self.ensure('desc', p)
-            cmd = self.ensure('cmd', p)
-            event = p.get('event', 'pressed')
-            useShell = p.get('useShell', True)
+    def createBinding(self, data: dict[str, Any] | None) -> Binding:
+        if data is None:
+            binding = Binding.sample()
+        else:
+            desc = self.data.get('desc')
+            key = self.data.get('key')
+            cmd = self.data.get('cmd')
+            event = self.data.get('event')
+            useShell = self.data.get('useShell')
             binding = Binding(key, event, desc, cmd, useShell, parent=self)
-            logging.debug(f'Add binding: {binding}')
-            for sig in binding.signals():
-                sig.connect(self.bindingsChanged.emit)
-            result.append(binding)
-        return result
+        for sig in binding.signals():
+            sig.connect(self.bindingsChanged.emit)
+        return binding
+
+
+    def initBinding(self) -> list[Binding]:
+        bindings: list[dict[str, Any]] = self.data['bindings']
+        if not bindings or not isinstance(bindings, Iterable):
+            return []
+        return [self.createBinding(p) for p in bindings]
 
     def exec(self, key: str, event: str) -> None:
         if self._shellProcess.state() != QProcess.ProcessState.Running:
