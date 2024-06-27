@@ -51,7 +51,7 @@ class PresetManager(QObject):
             self.errorHappened.emit(self.tr(f'JSON error: {err}'))
         return []
 
-    def createPreset(self, data: dict[str, Any]) -> Preset:
+    def createPreset(self, data: dict[str, Any] | None = None) -> Preset:
         if data is None:
             preset = Preset.sample(self)
         else:
@@ -99,7 +99,7 @@ class PresetManager(QObject):
 
     @Slot(result=int)
     def addNewPreset(self) -> int:
-        self._presets.append(self.createPreset(None))
+        self._presets.append(self.createPreset())
         self.savePresets()
         self._currentPresetIndex = len(self._presets) - 1
         self.presetsChanged.emit()

@@ -48,4 +48,16 @@ Kirigami.ScrollablePage {
             onEditingFinished: page.preset.shell = text
         }
     }
+
+    footer: Controls.DialogButtonBox {
+        Controls.Button {
+            text: qsTr("Reset")
+            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ResetRole
+        }
+
+        Controls.Button {
+            text: qsTr("Apply")
+            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ApplyRole
+        }
+    }
 }

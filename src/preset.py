@@ -51,7 +51,6 @@ class Preset(QObject):
     @name.setter
     def name(self, newName: str) -> None:
         self._name = newName
-        print(f"new name: {newName}")
         self.nameChanged.emit()
 
     @Property(str, notify=shellChanged)
@@ -69,7 +68,7 @@ class Preset(QObject):
 
     @Slot(result=int)
     def addNewBinding(self) -> int:
-        self._bindings.append(Binding.sample())
+        self._bindings.append(self.createBinding())
         self.bindingsChanged.emit()
         return len(self._bindings) - 1
 
@@ -78,16 +77,8 @@ class Preset(QObject):
         self._bindings.pop(index)
         self.bindingsChanged.emit()
 
-    def ensure(self, key: str, data: dict | None = None) -> Any:
-        if not data:
-            data = self.data
-        if result := data.get(key):
-            return result
-        msg = self.tr(f'config "{key}" missing')
-        self.errorHappened.emit(msg)
-
     def initName(self) -> str:
-        return self.ensure('name')
+        return self.data['name']
 
     def initShell(self) -> tuple[str, QProcess]:
         shell = self.data.get('shell', '/bin/sh')
@@ -99,15 +90,15 @@ class Preset(QObject):
             self._shellProcess.terminate()
             self._shellProcess.waitForFinished()
 
-    def createBinding(self, data: dict[str, Any] | None) -> Binding:
+    def createBinding(self, data: dict[str, Any] | None = None) -> Binding:
         if data is None:
             binding = Binding.sample()
         else:
-            desc = self.data.get('desc')
-            key = self.data.get('key')
-            cmd = self.data.get('cmd')
-            event = self.data.get('event')
-            useShell = self.data.get('useShell')
+            desc = data.get('desc')
+            key = data.get('key')
+            cmd = data.get('cmd')
+            event = data.get('event')
+            useShell = data.get('useShell')
             binding = Binding(key, event, desc, cmd, useShell, parent=self)
         for sig in binding.signals():
             sig.connect(self.bindingsChanged.emit)
