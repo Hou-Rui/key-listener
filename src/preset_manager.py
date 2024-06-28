@@ -67,7 +67,7 @@ class PresetManager(QObject):
         try:
             with open(self.path, 'w') as config_file:
                 data = [p.toDict() for p in self._presets]
-                json.dump(data, config_file, sort_keys=True)
+                json.dump(data, config_file, indent=2, sort_keys=True)
         except OSError as err:
             self.errorHappened.emit(self.tr(f'OS error: {err}'))
         except json.JSONDecodeError as err:
@@ -100,7 +100,6 @@ class PresetManager(QObject):
     @Slot(result=int)
     def addNewPreset(self) -> int:
         self._presets.append(self.createPreset())
-        self.savePresets()
         self._currentPresetIndex = len(self._presets) - 1
         self.presetsChanged.emit()
         self.currentPresetChanged.emit()
@@ -109,7 +108,6 @@ class PresetManager(QObject):
     @Slot(result=int)
     def removeCurrentPreset(self) -> int:
         self._presets.pop(self._currentPresetIndex)
-        self.savePresets()
         if self._currentPresetIndex >= len(self._presets):
             self._currentPresetIndex -= 1
         self.presetsChanged.emit()
@@ -119,14 +117,12 @@ class PresetManager(QObject):
     @Slot(result=int)
     def addNewBinding(self) -> int:
         index = self.currentPreset.addNewBinding()
-        self.savePresets()
         return index
 
     @Slot(int)
     def removeBindingAtIndex(self, index: int) -> None:
         print(f'removing index {index}')
         self.currentPreset.removeBindingAtIndex(index)
-        self.savePresets()
 
     @Slot(str)
     def execKeyPressCommand(self, key: str) -> None:

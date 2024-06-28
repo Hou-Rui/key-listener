@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-from typing import Any, Iterable, Self
+from typing import Any, Iterable, Literal, Self
 
 from PySide6.QtCore import Property, QObject, Signal, SignalInstance
+
+Event = Literal['pressed'] | Literal['released']
 
 
 @dataclass
 class Binding(QObject):
     _key: str
-    _event: str
+    _event: Event
     _desc: str
     _cmd: str
     _useShell: bool
@@ -18,7 +20,7 @@ class Binding(QObject):
     cmdChanged = Signal()
     useShellChanged = Signal()
 
-    def __init__(self, key: str, event: str, desc: str, cmd: str,
+    def __init__(self, key: str, event: Event, desc: str, cmd: str,
                  useShell: bool, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._key = key
@@ -55,7 +57,7 @@ class Binding(QObject):
         self.keyChanged.emit()
 
     @Property(str, notify=eventChanged)
-    def event(self) -> str:
+    def event(self) -> Event:
         return self._event
 
     @event.setter

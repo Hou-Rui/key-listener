@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls as Controls
+import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 
 import keylistener.backend as Backend
@@ -20,7 +20,6 @@ Kirigami.ScrollablePage {
         onTriggered: page.editBindingsRequested()
     }
 
-
     actions: [
         Utils.commonActions.startListeningAction,
         Utils.commonActions.stopListeningAction,
@@ -36,28 +35,46 @@ Kirigami.ScrollablePage {
             Kirigami.FormData.label: qsTr("Preset Settings")
         }
 
-        Controls.TextField {
+        TextField {
+            id: nameField
             Kirigami.FormData.label: qsTr("Name:")
             text: page.preset.name
-            onEditingFinished: page.preset.name = text
         }
 
-        Controls.TextField {
+        TextField {
+            id: shellField
             Kirigami.FormData.label: qsTr("Shell:")
             text: page.preset.shell
-            onEditingFinished: page.preset.shell = text
         }
     }
 
-    footer: Controls.DialogButtonBox {
-        Controls.Button {
+    readonly property bool isDirty: (
+        nameField.text !== page.preset.name
+        || shellField.text !== page.preset.shell
+    )
+
+    footer: DialogButtonBox {
+        Button {
             text: qsTr("Reset")
-            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ResetRole
+            DialogButtonBox.buttonRole: DialogButtonBox.ResetRole
+            enabled: page.isDirty
         }
 
-        Controls.Button {
+        Button {
             text: qsTr("Apply")
-            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ApplyRole
+            DialogButtonBox.buttonRole: DialogButtonBox.ApplyRole
+            enabled: !page.isDirty
+        }
+
+        onReset: {
+            nameField.text = page.preset.name;
+            shellField.text = page.preset.shell;
+        }
+
+        onApplied: {
+            page.preset.name = nameField.text;
+            page.preset.shell = shellField.text;
+            Backend.PresetManager.savePresets();
         }
     }
 }

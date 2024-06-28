@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls as Controls
+import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 
 import keylistener.backend as Backend
@@ -50,7 +50,7 @@ Kirigami.ScrollablePage {
             Backend.PresetManager.currentPresetIndex = currentIndex;
         }
 
-        delegate: Controls.ItemDelegate {
+        delegate: ItemDelegate {
             required property string name
             required property int index
 

@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as Controls
+import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 
 import keylistener.backend as Backend
@@ -42,37 +42,24 @@ Kirigami.ScrollablePage {
                 Kirigami.FormData.label: qsTr("Binding Settings")
             }
 
-            Controls.TextField {
-                id: descTextField
+            TextField {
+                id: descField
                 Kirigami.FormData.label: qsTr("Description:")
                 text: page.binding.desc
-                onEditingFinished: page.binding.desc = text
             }
 
-            Controls.TextField {
-                id: keyTextField
+            TextField {
+                id: keyField
                 Kirigami.FormData.label: qsTr("Key:")
-
                 text: page.binding.key
-                onEditingFinished: page.binding.key = text
             }
 
-            Controls.ComboBox {
-                id: eventComboBox
+            ComboBox {
+                id: eventBox
                 Kirigami.FormData.label: qsTr("Triggered When:")
                 Layout.fillWidth: true
                 model: [qsTr("Pressed"), qsTr("Released")]
-                currentIndex: {
-                    switch (page.binding.event) {
-                    case "pressed":
-                        return 0;
-                    case "released":
-                        return 1;
-                    default:
-                        return -1;
-                    }
-                }
-                onActivated: index => page.binding.event = model[index]
+                currentIndex: page.indexFromEvent(page.binding.event)
             }
 
             Kirigami.Separator {
@@ -80,34 +67,80 @@ Kirigami.ScrollablePage {
                 Kirigami.FormData.label: qsTr("Execution Settings")
             }
 
-            Controls.CheckBox {
-                id: useShellCheckBox
+            CheckBox {
+                id: useShellBox
                 Kirigami.FormData.label: qsTr("Run in Preset Shell:")
                 checked: page.binding.useShell
-                onToggled: page.binding.useShell = checked
             }
 
-            Controls.TextArea {
-                id: cmdTextArea
+            TextArea {
+                id: cmdArea
                 Kirigami.FormData.label: qsTr("Execute Command:")
                 Layout.fillWidth: true
                 wrapMode: TextEdit.WordWrap
                 Kirigami.FormData.labelAlignment: Qt.AlignCenter
                 text: page.binding.cmd
-                onEditingFinished: page.binding.cmd = text
             }
         }
     }
 
-    footer: Controls.DialogButtonBox {
-        Controls.Button {
+    function indexFromEvent(event: string): int {
+        switch (event) {
+        case "pressed":
+            return 0;
+        case "released":
+            return 1;
+        }
+        print(`Unknown event: ${event}`);
+        return -1;
+    }
+
+    function eventFromIndex(index: int): string {
+        const events = ["pressed", "released"]
+        if (0 <= index && index < events.length) {
+            return events[index];
+        }
+        print(`Unknown event index: ${index}`);
+        return "";
+    }
+
+    readonly property bool isDirty: (
+        descField.text !== page.binding.desc
+        || keyField.text !== page.binding.key
+        || eventBox.currentIndex !== page.indexFromEvent(page.binding.event)
+        || cmdArea.text !== page.binding.cmd
+        || useShellBox.checked !== page.binding.useShell
+    )
+
+
+    footer: DialogButtonBox {
+        Button {
             text: qsTr("Reset")
-            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ResetRole
+            DialogButtonBox.buttonRole: DialogButtonBox.ResetRole
+            enabled: page.isDirty
         }
 
-        Controls.Button {
+        Button {
             text: qsTr("Apply")
-            Controls.DialogButtonBox.buttonRole: Controls.DialogButtonBox.ApplyRole
+            DialogButtonBox.buttonRole: DialogButtonBox.ApplyRole
+            enabled: !page.isDirty
+        }
+
+        onReset: {
+            descField.text = page.binding.desc;
+            keyField.text = page.binding.key;
+            eventBox.currentIndex = page.indexFromEvent(page.binding.event);
+            cmdArea.text = page.binding.cmd;
+            useShellBox.checked = page.binding.useShell;
+        }
+
+        onApplied: {
+            page.binding.desc = descField.text;
+            page.binding.key = keyField.text;
+            page.binding.event = page.eventFromIndex(eventBox.currentIndex);
+            page.binding.cmd = cmdArea.text;
+            page.binding.useShell = useShellBox.checked;
+            Backend.PresetManager.savePresets();
         }
     }
 }
