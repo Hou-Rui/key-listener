@@ -5,8 +5,8 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
 	id: footer
 	required property bool isDirty
-	required property var onReset
-	required property var onApplied
+	signal reset
+	signal applied
 
 	spacing: 0
 
@@ -31,10 +31,10 @@ ColumnLayout {
 			text: qsTr("Apply")
 			DialogButtonBox.buttonRole: DialogButtonBox.ApplyRole
 			icon.name: "document-save"
-			enabled: !footer.isDirty
+			enabled: footer.isDirty
 		}
 
-		onReset: footer.onReset
-		onApplied: footer.onApplied
+		onReset: footer.reset()
+		onApplied: footer.applied()
 	}
 }
