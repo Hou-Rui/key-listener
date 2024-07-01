@@ -11,6 +11,7 @@
         "src/qml/PresetsListPage.qml",
         "src/qml/PresetSettingsPage.qml",
         "src/qml/BindingsListPage.qml",
-        "src/qml/BindingSettingsPage.qml"
+        "src/qml/BindingSettingsPage.qml",
+        "src/qml/PageFooter.qml"
     ]
 }

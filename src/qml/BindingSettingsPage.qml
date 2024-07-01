@@ -104,27 +104,12 @@ Kirigami.ScrollablePage {
         return "";
     }
 
-    readonly property bool isDirty: (
-        descField.text !== page.binding.desc
-        || keyField.text !== page.binding.key
-        || eventBox.currentIndex !== page.indexFromEvent(page.binding.event)
-        || cmdArea.text !== page.binding.cmd
-        || useShellBox.checked !== page.binding.useShell
-    )
-
-
-    footer: DialogButtonBox {
-        Button {
-            text: qsTr("Reset")
-            DialogButtonBox.buttonRole: DialogButtonBox.ResetRole
-            enabled: page.isDirty
-        }
-
-        Button {
-            text: qsTr("Apply")
-            DialogButtonBox.buttonRole: DialogButtonBox.ApplyRole
-            enabled: !page.isDirty
-        }
+    footer: PageFooter {
+        isDirty: descField.text !== page.binding.desc
+              || keyField.text !== page.binding.key
+              || eventBox.currentIndex !== page.indexFromEvent(page.binding.event)
+              || cmdArea.text !== page.binding.cmd
+              || useShellBox.checked !== page.binding.useShell
 
         onReset: {
             descField.text = page.binding.desc;

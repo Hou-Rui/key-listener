@@ -48,23 +48,9 @@ Kirigami.ScrollablePage {
         }
     }
 
-    readonly property bool isDirty: (
-        nameField.text !== page.preset.name
-        || shellField.text !== page.preset.shell
-    )
-
-    footer: DialogButtonBox {
-        Button {
-            text: qsTr("Reset")
-            DialogButtonBox.buttonRole: DialogButtonBox.ResetRole
-            enabled: page.isDirty
-        }
-
-        Button {
-            text: qsTr("Apply")
-            DialogButtonBox.buttonRole: DialogButtonBox.ApplyRole
-            enabled: !page.isDirty
-        }
+    footer: PageFooter {
+        isDirty: nameField.text !== page.preset.name
+              || shellField.text !== page.preset.shell
 
         onReset: {
             nameField.text = page.preset.name;
