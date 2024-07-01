@@ -15,7 +15,11 @@ Kirigami.ScrollablePage {
             icon.name: "list-add"
             text: qsTr("Add Binding")
             displayHint: Kirigami.DisplayHint.AlwaysHide
-            onTriggered: bindingListView.currentIndex = Backend.PresetManager.addNewBinding()
+            onTriggered: {
+                const currentPreset = Backend.PresetManager.currentPreset;
+                const newIndex = currentPreset.addNewBinding();
+                bindingListView.currentIndex = newIndex;
+            }
         },
         Kirigami.Action {
             icon.name: "list-remove"
@@ -34,8 +38,9 @@ Kirigami.ScrollablePage {
         }
         standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
         onAccepted: {
+            const currentPreset = Backend.PresetManager.currentPreset;
             const index = bindingListView.currentIndex;
-            Backend.PresetManager.removeBindingAtIndex(index);
+            currentPreset.removeBindingAtIndex(index);
             if (index >= bindingListView.model.length) {
                 bindingListView.currentIndex = index - 1;
             } else {

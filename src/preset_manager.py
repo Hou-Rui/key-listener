@@ -89,7 +89,7 @@ class PresetManager(QObject):
 
     @Property('QVariant', notify=currentPresetChanged)
     def currentPreset(self) -> Preset:
-        if not self.presets:
+        if not self._presets:
             self.addNewPreset()
         return self._presets[self._currentPresetIndex]
 

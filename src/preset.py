@@ -66,17 +66,6 @@ class Preset(QObject):
     def bindings(self) -> list[Binding]:
         return self._bindings
 
-    @Slot(result=int)
-    def addNewBinding(self) -> int:
-        self._bindings.append(self.createBinding())
-        self.bindingsChanged.emit()
-        return len(self._bindings) - 1
-
-    @Slot(int)
-    def removeBindingAtIndex(self, index: int) -> None:
-        self._bindings.pop(index)
-        self.bindingsChanged.emit()
-
     def initName(self) -> str:
         return self.data['name']
 
