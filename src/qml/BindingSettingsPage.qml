@@ -11,7 +11,9 @@ Kirigami.ScrollablePage {
     id: page
     title: qsTr("Settings")
     required property var binding
+
     signal editPresetsRequested
+    signal currentDescChanged(string desc)
 
     Kirigami.Action {
         id: editAction
@@ -125,6 +127,7 @@ Kirigami.ScrollablePage {
             page.binding.event = page.eventFromIndex(eventBox.currentIndex);
             page.binding.cmd = cmdArea.text;
             page.binding.useShell = useShellBox.checked;
+            page.currentDescChanged(page.binding.desc);
             Backend.PresetManager.savePresets();
         }
     }

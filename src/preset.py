@@ -4,7 +4,7 @@ from subprocess import Popen
 from typing import Any, Iterable, Self
 
 from PySide6.QtCore import (Property, QObject, QProcess,
-                            Signal, Slot, SignalInstance)
+                            Signal, SignalInstance, Slot)
 
 from binding import Binding
 
@@ -93,6 +93,15 @@ class Preset(QObject):
             sig.connect(self.bindingsChanged.emit)
         return binding
 
+    @Slot()
+    def addNewBinding(self):
+        self._bindings.append(self.createBinding())
+        self.bindingsChanged.emit()
+
+    @Slot(int, result=int)
+    def removeBindingAtIndex(self, index: int):
+        self._bindings.pop(index)
+        self.bindingsChanged.emit()
 
     def initBinding(self) -> list[Binding]:
         bindings: list[dict[str, Any]] = self.data['bindings']

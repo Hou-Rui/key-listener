@@ -33,6 +33,9 @@ Kirigami.ApplicationWindow {
             root.pageStack.push(bindingsListPage);
             root.pageStack.push(bindingSettingsPage);
         }
+        onCurrentNameChanged: name => {
+            presetsListPage.updateCurrentName(name);
+        }
     }
 
     BindingsListPage {
@@ -45,6 +48,9 @@ Kirigami.ApplicationWindow {
         onEditPresetsRequested: {
             root.pageStack.pop();
             root.pageStack.pop();
+        }
+        onCurrentDescChanged: desc => {
+            bindingsListPage.updateCurrentDesc(desc);
         }
     }
 

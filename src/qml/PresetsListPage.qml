@@ -63,4 +63,8 @@ Kirigami.ScrollablePage {
             onClicked: presetListView.currentIndex = index
         }
     }
+
+    function updateCurrentName(name: string) {
+        presetListView.currentItem.text = name;
+    }
 }

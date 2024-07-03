@@ -67,4 +67,8 @@ Kirigami.ScrollablePage {
             onClicked: bindingListView.currentIndex = index
         }
     }
+
+    function updateCurrentDesc(desc: string) {
+        bindingListView.currentItem.text = desc;
+    }
 }

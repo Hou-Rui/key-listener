@@ -10,7 +10,9 @@ Kirigami.ScrollablePage {
     id: page
     title: qsTr("Settings")
     required property var preset
+
     signal editBindingsRequested
+    signal currentNameChanged(string name)
 
     Kirigami.Action {
         id: editAction
@@ -60,6 +62,7 @@ Kirigami.ScrollablePage {
         onApplied: {
             page.preset.name = nameField.text;
             page.preset.shell = shellField.text;
+            page.currentNameChanged(page.preset.name);
             Backend.PresetManager.savePresets();
         }
     }
