@@ -3,8 +3,8 @@ import shlex
 from subprocess import Popen
 from typing import Any, Iterable, Self
 
-from PySide6.QtCore import (Property, QObject, QProcess,
-                            Signal, SignalInstance, Slot)
+from PySide6.QtCore import (Property, QObject, QProcess, Signal,
+                            SignalInstance, Slot)
 
 from binding import Binding
 

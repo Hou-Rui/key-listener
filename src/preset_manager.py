@@ -1,7 +1,7 @@
+import json
 from pathlib import Path
 from typing import Any, Iterable
 
-import json
 from PySide6.QtCore import Property, QObject, QStandardPaths, Signal, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
 
