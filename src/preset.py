@@ -83,11 +83,11 @@ class Preset(QObject):
         if data is None:
             binding = Binding.sample()
         else:
-            desc = data.get('desc')
-            key = data.get('key')
-            cmd = data.get('cmd')
-            event = data.get('event')
-            useShell = data.get('useShell')
+            desc: str = data.get('desc', '')
+            key: str = data.get('key', '')
+            cmd: str = data.get('cmd', '')
+            event: str = data.get('event', 'pressed')
+            useShell: bool = data.get('useShell', True)
             binding = Binding(key, event, desc, cmd, useShell, parent=self)
         for sig in binding.signals():
             sig.connect(self.bindingsChanged.emit)
