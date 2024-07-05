@@ -100,10 +100,8 @@ class PresetManager(QObject):
     @Slot(result=int)
     def addNewPreset(self) -> int:
         self._presets.append(self.createPreset())
-        self._currentPresetIndex = len(self._presets) - 1
         self.presetsChanged.emit()
-        self.currentPresetChanged.emit()
-        return self._currentPresetIndex
+        return len(self._presets) - 1
 
     @Slot(result=int)
     def removeCurrentPreset(self) -> int:

@@ -15,7 +15,10 @@ Kirigami.ScrollablePage {
             icon.name: "list-add"
             text: qsTr("Add Preset")
             displayHint: Kirigami.DisplayHint.AlwaysHide
-            onTriggered: Backend.PresetManager.addNewPreset()
+            onTriggered: {
+                const newIndex = Backend.PresetManager.addNewPreset();
+                presetListView.currentIndex = newIndex;
+            }
         },
         Kirigami.Action {
             icon.name: "list-remove"
@@ -33,7 +36,15 @@ Kirigami.ScrollablePage {
             return qsTr(`The preset "${preset.name}" will be removed.`);
         }
         standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
-        onAccepted: Backend.PresetManager.removeCurrentPreset()
+        onAccepted: {
+            const index = presetListView.currentIndex;
+            Backend.PresetManager.removeCurrentPreset();
+            if (index >= presetListView.model.length) {
+                presetListView.currentIndex = index - 1;
+            } else {
+                presetListView.currentIndex = index;
+            }
+        }
     }
 
     ListView {
