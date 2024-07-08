@@ -6,7 +6,7 @@ from typing import Any, Iterable, Self
 from PySide6.QtCore import (Property, QObject, QProcess, Signal,
                             SignalInstance, Slot)
 
-from binding import Binding
+from binding import Binding, BindingListModel
 
 
 class Preset(QObject):
@@ -18,10 +18,10 @@ class Preset(QObject):
     def __init__(self, data: dict[str, Any],
                  parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self.data = data
-        self._name = self.initName()
-        self._shell, self._shellProcess = self.initShell()
-        self._bindings = self.initBinding()
+        self._data = data
+        self._name = self._initName()
+        self._shell, self._shellProcess = self._initShell()
+        self._bindings = self._initBinding()
 
     def signals(self) -> Iterable[SignalInstance]:
         return (self.nameChanged, self.shellChanged)
@@ -66,48 +66,20 @@ class Preset(QObject):
     def bindings(self) -> list[Binding]:
         return self._bindings
 
-    def initName(self) -> str:
-        return self.data['name']
-
-    def initShell(self) -> tuple[str, QProcess]:
-        shell = self.data.get('shell', '/bin/sh')
-        shellProcess = QProcess(self)
-        return shell, shellProcess
-
     def stopShell(self) -> None:
         if self._shellProcess.state() == QProcess.ProcessState.Running:
             self._shellProcess.terminate()
             self._shellProcess.waitForFinished()
 
-    def createBinding(self, data: dict[str, Any] | None = None) -> Binding:
-        if data is None:
-            binding = Binding.sample()
-        else:
-            desc: str = data.get('desc', '')
-            key: str = data.get('key', '')
-            cmd: str = data.get('cmd', '')
-            event: str = data.get('event', 'pressed')
-            useShell: bool = data.get('useShell', True)
-            binding = Binding(key, event, desc, cmd, useShell, parent=self)
-        for sig in binding.signals():
-            sig.connect(self.bindingsChanged.emit)
-        return binding
-
     @Slot()
-    def addNewBinding(self):
-        self._bindings.append(self.createBinding())
+    def addNewBinding(self) -> None:
+        self._bindings.append(self._createBinding())
         self.bindingsChanged.emit()
 
     @Slot(int, result=int)
-    def removeBindingAtIndex(self, index: int):
+    def removeBindingAtIndex(self, index: int) -> None:
         self._bindings.pop(index)
         self.bindingsChanged.emit()
-
-    def initBinding(self) -> list[Binding]:
-        bindings: list[dict[str, Any]] = self.data['bindings']
-        if not bindings or not isinstance(bindings, Iterable):
-            return []
-        return [self.createBinding(p) for p in bindings]
 
     def exec(self, key: str, event: str) -> None:
         if self._shellProcess.state() != QProcess.ProcessState.Running:
@@ -124,3 +96,31 @@ class Preset(QObject):
                     self._shellProcess.write(cmd.encode())
                 else:
                     Popen(shlex.split(f'sh -c "{cmd}"'))
+
+    def _initName(self) -> str:
+        return self._data['name']
+
+    def _initShell(self) -> tuple[str, QProcess]:
+        shell = self._data.get('shell', '/bin/sh')
+        shellProcess = QProcess(self)
+        return shell, shellProcess
+
+    def _createBinding(self, data: dict[str, Any] | None = None) -> Binding:
+        if data is None:
+            binding = Binding.sample()
+        else:
+            desc: str = data.get('desc', '')
+            key: str = data.get('key', '')
+            cmd: str = data.get('cmd', '')
+            event: str = data.get('event', 'pressed')
+            useShell: bool = data.get('useShell', True)
+            binding = Binding(key, event, desc, cmd, useShell, parent=self)
+        for sig in binding.signals():
+            sig.connect(self.bindingsChanged.emit)
+        return binding
+
+    def _initBinding(self) -> list[Binding]:
+        bindings: list[dict[str, Any]] = self._data['bindings']
+        if not bindings or not isinstance(bindings, Iterable):
+            return []
+        return [self._createBinding(p) for p in bindings]

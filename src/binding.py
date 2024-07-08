@@ -1,6 +1,6 @@
-from typing import Any, Iterable, Self
+from typing import Any, Iterable, Self, override
 
-from PySide6.QtCore import Property, QObject, Signal, SignalInstance
+from PySide6.QtCore import Qt, QModelIndex, QAbstractListModel, Property, QObject, Signal, SignalInstance
 
 
 class Binding(QObject):
@@ -81,3 +81,34 @@ class Binding(QObject):
     def useShell(self, newUseShell: bool) -> None:
         self._useShell = newUseShell
         self.useShellChanged.emit()
+
+
+class BindingListModel(QAbstractListModel):
+    KeyRole, DescRole, EventRole, CmdRole, UseShellRole = \
+        range(Qt.ItemDataRole.UserRole, 5)
+
+    def __init__(self, bindings: list[Binding] = [], parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._bindings: list[Binding] = bindings
+
+    @override
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        if parent.isValid():
+            return 0
+        return len(self._bindings)
+
+    @override
+    def data(self, index: QModelIndex, role: int) -> Any:
+        binding = self._bindings[index.row()]
+        match role:
+            case self.DescRole | Qt.ItemDataRole.DisplayRole:
+                return binding.desc
+            case self.KeyRole:
+                return binding.key
+            case self.CmdRole:
+                return binding.cmd
+            case self.EventRole:
+                return binding.event
+            case self.UseShellRole:
+                return binding.useShell
+        return None
