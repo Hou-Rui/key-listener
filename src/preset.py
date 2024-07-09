@@ -62,8 +62,8 @@ class Preset(QObject):
         self._shell = newShell
         self.shellChanged.emit()
 
-    @Property('QVariantList', notify=bindingsChanged)
-    def bindings(self) -> list[Binding]:
+    @Property('QVariant', notify=bindingsChanged)
+    def bindings(self) -> BindingListModel:
         return self._bindings
 
     def stopShell(self) -> None:
@@ -119,8 +119,8 @@ class Preset(QObject):
             sig.connect(self.bindingsChanged.emit)
         return binding
 
-    def _initBinding(self) -> list[Binding]:
-        bindings: list[dict[str, Any]] = self._data['bindings']
-        if not bindings or not isinstance(bindings, Iterable):
+    def _initBinding(self) -> BindingListModel:
+        data: list[dict[str, Any]] = self._data['bindings']
+        if not data or not isinstance(data, Iterable):
             return []
-        return [self._createBinding(p) for p in bindings]
+        return BindingListModel([self._createBinding(p) for p in data], self)

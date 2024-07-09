@@ -20,11 +20,11 @@ class PresetManager(QObject):
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self.path = self.initPath()
-        self._presets = self.initPresets()
+        self.path = self._initPath()
+        self._presets = self._initPresets()
         self._currentPresetIndex = 0
 
-    def initPath(self) -> str:
+    def _initPath(self) -> str:
         type = QStandardPaths.StandardLocation.ConfigLocation
         user_config_dir = QStandardPaths.writableLocation(type)
         config_path = Path(user_config_dir, 'keylistener')
@@ -34,7 +34,7 @@ class PresetManager(QObject):
             config_file_path.touch()
         return str(config_file_path)
 
-    def initPresets(self) -> list[Preset]:
+    def _initPresets(self) -> list[Preset]:
         try:
             with open(self.path, 'r') as config_file:
                 result = []
@@ -42,7 +42,7 @@ class PresetManager(QObject):
                 if not isinstance(data, Iterable):
                     return []
                 for p in data:
-                    preset = self.createPreset(p)
+                    preset = self._createPreset(p)
                     result.append(preset)
                 return result
         except OSError as err:
@@ -51,7 +51,7 @@ class PresetManager(QObject):
             self.errorHappened.emit(self.tr(f'JSON error: {err}'))
         return []
 
-    def createPreset(self, data: dict[str, Any] | None = None) -> Preset:
+    def _createPreset(self, data: dict[str, Any] | None = None) -> Preset:
         if data is None:
             preset = Preset.sample(self)
         else:
@@ -99,7 +99,7 @@ class PresetManager(QObject):
 
     @Slot(result=int)
     def addNewPreset(self) -> int:
-        self._presets.append(self.createPreset())
+        self._presets.append(self._createPreset())
         self.presetsChanged.emit()
         return len(self._presets) - 1
 

@@ -85,17 +85,36 @@ class Binding(QObject):
 
 class BindingListModel(QAbstractListModel):
     KeyRole, DescRole, EventRole, CmdRole, UseShellRole = \
-        range(Qt.ItemDataRole.UserRole, 5)
+        (Qt.ItemDataRole.UserRole + x for x in range(5))
 
     def __init__(self, bindings: list[Binding] = [], parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._bindings: list[Binding] = bindings
+
+    def append(self, binding: Binding) -> None:
+        self._bindings.append(binding)
+
+    def pop(self, index: int) -> Binding:
+        return self._bindings.pop(index)
+
+    def __getitem__(self, index: int) -> Binding:
+        return self._bindings[index]
 
     @override
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         if parent.isValid():
             return 0
         return len(self._bindings)
+
+    @override
+    def roleNames(self) -> dict[int, bytes]:
+        return {
+            self.DescRole: b"desc",
+            self.UseShellRole: b"useShell",
+            self.CmdRole: b"cmd",
+            self.EventRole: b"event",
+            self.KeyRole: b"key",
+        }
 
     @override
     def data(self, index: QModelIndex, role: int) -> Any:

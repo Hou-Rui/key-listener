@@ -54,10 +54,14 @@ Kirigami.ScrollablePage {
         implicitWidth: parent.width
         reuseItems: true
         model: Backend.PresetManager.currentPreset.bindings
-        property var currentBinding: model[currentIndex]
+        property var currentBinding: currentItem
 
         delegate: Controls.ItemDelegate {
             required property string desc
+            required property string key
+            required property string cmd
+            required property string event
+            required property bool useShell
             required property int index
 
             text: desc
