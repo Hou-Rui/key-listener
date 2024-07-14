@@ -1,17 +1,11 @@
 {
     "files": [
         "src/main.py",
-        "src/binding.py",
-        "src/preset.py",
-        "src/preset_manager.py",
-        "src/event_listener.py",
-        "src/qml/qmldir",
-        "src/qml/MainView.qml",
-        "src/qml/Utils.qml",
-        "src/qml/PresetsListPage.qml",
-        "src/qml/PresetSettingsPage.qml",
-        "src/qml/BindingsListPage.qml",
-        "src/qml/BindingSettingsPage.qml",
-        "src/qml/PageFooter.qml"
+        "src/models.py",
+        "src/window.py",
+        "src/forms.py",
+        "src/executor.py",
+        "src/listener.py",
+        "src/utils.py"
     ]
 }
