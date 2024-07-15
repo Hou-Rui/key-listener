@@ -1,6 +1,5 @@
-__pycache__/
+**/__pycache__/
 .vscode/
 venv/
-keylistener/
-src/qml/keylistener
-pysidedeploy.spec
+keylistener
+**/pysidedeploy.spec
