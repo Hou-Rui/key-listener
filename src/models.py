@@ -6,6 +6,7 @@ from typing import Any, override
 from PySide6.QtCore import (QByteArray, QModelIndex, QObject, QSize,
                             QStandardPaths, Qt)
 from PySide6.QtGui import QStandardItem, QStandardItemModel
+from shiboken6 import isValid
 
 import utils
 
@@ -18,12 +19,22 @@ class Binding:
     useShell: bool
     cmd: str
 
+    @classmethod
+    def sample(cls):
+        return cls(desc='New Binding', key='', event='pressed',
+                   useShell=True, cmd='')
+
 
 @dataclass
 class Preset:
     desc: str
     shell: str
     bindings: list[Binding]
+
+    @classmethod
+    def sample(cls):
+        return cls(desc='New Preset', shell='/bin/sh',
+                   bindings=[Binding.sample()])
 
     def getBindings(self, key: str, event: str) -> list[Binding]:
         return [b for b in self.bindings
@@ -89,6 +100,30 @@ class ConfigModel(QStandardItemModel):
             self.BindingRole: QByteArray(b'binding'),
             **super().roleNames()
         }
+
+    def insertPreset(self, current: QModelIndex, preset: Preset) -> QModelIndex:
+        item = QStandardItem()
+        item.setData(preset, self.PresetRole)
+        if not current.isValid():
+            self.appendRow(item)
+            return item.index()
+        if current.data(self.BindingRole):
+            current = current.parent()
+        self.insertRow(current.row() + 1, item)
+        return item.index()
+
+    def insertBinding(self, current: QModelIndex, binding: Binding) -> QModelIndex:
+        item = QStandardItem()
+        item.setData(binding, self.BindingRole)
+        if not current.isValid():
+            print('Error: attempting to insert binding without selection')
+            return QModelIndex()
+        if current.data(self.PresetRole):
+            self.itemFromIndex(current).appendRow(item)
+            return item.index()
+        print(current.row())
+        self.itemFromIndex(current.parent()).insertRow(current.row() + 1, item)
+        return item.index()
 
     def save(self) -> None:
         with open(self._path, 'w') as config:

@@ -1,6 +1,6 @@
 from typing import override
 
-from PySide6.QtCore import QItemSelection, QModelIndex, Qt
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QIcon
 from PySide6.QtWidgets import (QDockWidget, QMainWindow, QSizePolicy,
                                QStackedWidget, QTreeView, QWidget)
@@ -53,10 +53,31 @@ class MainWindow(QMainWindow):
         self._actionStop = QAction(QIcon.fromTheme(
             QIcon.ThemeIcon.MediaPlaybackStop), self.tr('Stop'), self)
 
+        self._actionAddBinding.setEnabled(False)
+        self._actionRemove.setEnabled(False)
         self._actionStart.setEnabled(False)
         self._actionStop.setEnabled(False)
 
         # connections
+        @self._actionAddBinding.triggered.connect
+        def _():
+            current = self._selectedIndex()
+            index = self._model.insertBinding(current, Binding.sample())
+            self._selectionModel.select(
+                index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+            self._treeView.expand(index.parent())
+
+        @self._actionAddPreset.triggered.connect
+        def _():
+            current = self._selectedIndex()
+            index = self._model.insertPreset(current, Preset.sample())
+            self._selectionModel.select(
+                index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+
+        @self._actionRemove.triggered.connect
+        def _():
+            pass
+
         @self._listener.listeningChanged.connect
         def _():
             listening = self._listener.isListening()
@@ -187,6 +208,8 @@ class MainWindow(QMainWindow):
         @self._selectionModel.selectionChanged.connect
         def _(selected: QItemSelection, _):
             index = self._selectedIndex(selected)
+            self._actionAddBinding.setEnabled(index.isValid())
+            self._actionRemove.setEnabled(index.isValid())
             self._actionStart.setEnabled(index.isValid())
             item = self._model.itemData(index)
 
