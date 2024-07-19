@@ -1,7 +1,7 @@
 from typing import override
 
-from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, Qt
-from PySide6.QtGui import QAction, QCloseEvent, QIcon
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, Qt
+from PySide6.QtGui import QAction, QCloseEvent, QIcon, QStandardItem
 from PySide6.QtWidgets import (QDockWidget, QMainWindow, QSizePolicy,
                                QStackedWidget, QTreeView, QWidget)
 
@@ -10,7 +10,7 @@ from forms import BindingSettingsForm, PresetSettingsForm
 from listener import EventListener
 from models import Binding, ConfigModel, Preset
 from utils import (MAIN_WINDOW_HEIGHT_MIN, MAIN_WINDOW_WIDTH_MIN,
-                   PROJECT_DISPLAY_NAME, ROW_HEIGHT)
+                   PROJECT_DISPLAY_NAME)
 
 
 class MainWindow(QMainWindow):
@@ -61,16 +61,17 @@ class MainWindow(QMainWindow):
         # connections
         @self._actionAddBinding.triggered.connect
         def _():
-            current = self._selectedIndex()
-            index = self._model.insertBinding(current, Binding.sample())
-            self._selectionModel.select(
-                index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
-            self._treeView.expand(index.parent())
+            if current := self._selectedItem():
+                if current.data(ConfigModel.BindingRole):
+                    current = current.parent()
+                index = self._model.addBinding(Binding.sample(), current)
+                self._selectionModel.select(
+                    index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+                self._treeView.expand(index.parent())
 
         @self._actionAddPreset.triggered.connect
         def _():
-            current = self._selectedIndex()
-            index = self._model.insertPreset(current, Preset.sample())
+            index = self._model.addPreset(Preset.sample())
             self._selectionModel.select(
                 index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
@@ -130,17 +131,15 @@ class MainWindow(QMainWindow):
         dock.setWidget(self._treeView)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
 
-    def _selectedIndex(self, selected: QItemSelection | None = None) -> QModelIndex:
+    def _selectedItem(self, selected: QItemSelection | None = None) -> QStandardItem | None:
         if selected:
             indexes = selected.indexes()
         else:
             indexes = self._selectionModel.selectedIndexes()
-        if indexes and indexes[0].isValid():
-            return indexes[0]
-        return QModelIndex()
+        return self._model.itemFromIndex(indexes[0])
 
     def _selectedPreset(self) -> Preset | None:
-        if item := self._model.itemFromIndex(self._selectedIndex()):
+        if item := self._selectedItem():
             if data := item.data(ConfigModel.PresetRole):
                 return data
             elif item.data(ConfigModel.BindingRole):
@@ -148,9 +147,9 @@ class MainWindow(QMainWindow):
         return None
 
     def _selectedBinding(self) -> Binding | None:
-        item = self._model.itemFromIndex(self._selectedIndex())
-        if binding := item.data(ConfigModel.BindingRole):
-            return binding
+        if item := self._selectedItem():
+            if binding := item.data(ConfigModel.BindingRole):
+                return binding
         return None
 
     def _initSettingsForm(self) -> None:
@@ -174,7 +173,7 @@ class MainWindow(QMainWindow):
             if preset := self._selectedPreset():
                 preset.desc = presetForm.desc()
                 preset.shell = presetForm.shell()
-                index = self._selectedIndex()
+                index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
 
@@ -192,7 +191,7 @@ class MainWindow(QMainWindow):
                 binding.event = bindingForm.keyEvent()
                 binding.cmd = bindingForm.cmd()
                 binding.useShell = bindingForm.useShell()
-                index = self._selectedIndex()
+                index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
 
@@ -207,19 +206,23 @@ class MainWindow(QMainWindow):
 
         @self._selectionModel.selectionChanged.connect
         def _(selected: QItemSelection, _):
-            index = self._selectedIndex(selected)
-            self._actionAddBinding.setEnabled(index.isValid())
-            self._actionRemove.setEnabled(index.isValid())
-            self._actionStart.setEnabled(index.isValid())
-            item = self._model.itemData(index)
+            item = self._selectedItem(selected)
+            hasSelection = item is not None
+            self._actionAddBinding.setEnabled(hasSelection)
+            self._actionRemove.setEnabled(hasSelection)
+            self._actionStart.setEnabled(hasSelection)
+
+            if not hasSelection:
+                self._stackedWidget.setCurrentWidget(placeholderForm)
+                return
 
             preset: Preset | None
             binding: Binding | None
-            if preset := item.get(ConfigModel.PresetRole):
+            if preset := item.data(ConfigModel.PresetRole):
                 presetForm.setDesc(preset.desc)
                 presetForm.setShell(preset.shell)
                 self._stackedWidget.setCurrentWidget(presetForm)
-            elif binding := item.get(ConfigModel.BindingRole):
+            elif binding := item.data(ConfigModel.BindingRole):
                 bindingForm.setDesc(binding.desc)
                 bindingForm.setKey(binding.key)
                 bindingForm.setKeyEvent(binding.event)

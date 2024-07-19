@@ -6,7 +6,6 @@ from typing import Any, override
 from PySide6.QtCore import (QByteArray, QModelIndex, QObject, QSize,
                             QStandardPaths, Qt)
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from shiboken6 import isValid
 
 import utils
 
@@ -48,7 +47,6 @@ class ConfigModel(QStandardItemModel):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._path = self._initPath()
-        self._presets = self._initPresets()
         self._setupModel()
 
     def _initPath(self) -> str:
@@ -60,25 +58,19 @@ class ConfigModel(QStandardItemModel):
             file.touch()
         return str(file)
 
-    def _initPresets(self) -> list[Preset]:
-        with open(self._path, 'r') as config:
-            result = []
-            for raw in json.load(config):
-                p = Preset(**raw)
-                p.bindings = [Binding(**b) for b in raw['bindings']]
-                result.append(p)
-            return result
-
     def _setupModel(self) -> None:
-        root = self.invisibleRootItem()
-        for preset in self._presets:
-            presetItem = QStandardItem()
-            presetItem.setData(preset, self.PresetRole)
-            for binding in preset.bindings:
-                bindingItem = QStandardItem()
-                bindingItem.setData(binding, self.BindingRole)
-                presetItem.appendRow(bindingItem)
-            root.appendRow(presetItem)
+        with open(self._path, 'r') as config:
+            root = self.invisibleRootItem()
+            for raw in json.load(config):
+                preset = Preset(**raw)
+                preset.bindings = [Binding(**b) for b in raw['bindings']]
+                presetItem = QStandardItem()
+                presetItem.setData(preset, self.PresetRole)
+                for binding in preset.bindings:
+                    bindingItem = QStandardItem()
+                    bindingItem.setData(binding, self.BindingRole)
+                    presetItem.appendRow(bindingItem)
+                root.appendRow(presetItem)
 
     @override
     def data(self, index: QModelIndex, role: int) -> Any:
@@ -101,31 +93,20 @@ class ConfigModel(QStandardItemModel):
             **super().roleNames()
         }
 
-    def insertPreset(self, current: QModelIndex, preset: Preset) -> QModelIndex:
+    def addPreset(self, preset: Preset) -> QModelIndex:
         item = QStandardItem()
         item.setData(preset, self.PresetRole)
-        if not current.isValid():
-            self.appendRow(item)
-            return item.index()
-        if current.data(self.BindingRole):
-            current = current.parent()
-        self.insertRow(current.row() + 1, item)
+        self.appendRow(item)
         return item.index()
 
-    def insertBinding(self, current: QModelIndex, binding: Binding) -> QModelIndex:
+    def addBinding(self, binding: Binding, parent: QStandardItem) -> QModelIndex:
         item = QStandardItem()
         item.setData(binding, self.BindingRole)
-        if not current.isValid():
-            print('Error: attempting to insert binding without selection')
-            return QModelIndex()
-        if current.data(self.PresetRole):
-            self.itemFromIndex(current).appendRow(item)
-            return item.index()
-        print(current.row())
-        self.itemFromIndex(current.parent()).insertRow(current.row() + 1, item)
+        parent.appendRow(item)
         return item.index()
 
     def save(self) -> None:
         with open(self._path, 'w') as config:
-            raw = [asdict(p) for p in self._presets]
+            raw = [asdict(self.item(row).data(self.PresetRole))
+                   for row in range(self.rowCount())]
             json.dump(raw, config, indent=2)
