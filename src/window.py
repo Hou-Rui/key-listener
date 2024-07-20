@@ -77,7 +77,9 @@ class MainWindow(QMainWindow):
 
         @self._actionRemove.triggered.connect
         def _():
-            pass
+            if current := self._selectedItem():
+                self._model.removeItem(current)
+                self._selectionModel.clear()
 
         @self._listener.listeningChanged.connect
         def _():
@@ -136,7 +138,9 @@ class MainWindow(QMainWindow):
             indexes = selected.indexes()
         else:
             indexes = self._selectionModel.selectedIndexes()
-        return self._model.itemFromIndex(indexes[0])
+        if indexes and indexes[0].isValid():
+            return self._model.itemFromIndex(indexes[0])
+        return None
 
     def _selectedPreset(self) -> Preset | None:
         if item := self._selectedItem():

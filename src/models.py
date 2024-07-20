@@ -1,5 +1,5 @@
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, override
 
@@ -23,7 +23,7 @@ class Binding:
 class Preset:
     desc: str = 'New Preset'
     shell: str = '/bin/sh'
-    bindings: list[Binding] = [Binding()]
+    bindings: list[Binding] = field(default_factory=list)
 
     def getBindings(self, key: str, event: str) -> list[Binding]:
         return [b for b in self.bindings
@@ -93,7 +93,19 @@ class ConfigModel(QStandardItemModel):
         item = QStandardItem()
         item.setData(binding, self.BindingRole)
         parent.appendRow(item)
+        preset: Preset = parent.data(self.PresetRole)
+        preset.bindings.append(binding)
         return item.index()
+
+    def removeItem(self, item: QStandardItem) -> None:
+        if item.data(ConfigModel.PresetRole):
+            self.removeRow(item.row())
+        else:
+            parent = item.parent()
+            preset: Preset = parent.data(ConfigModel.PresetRole)
+            preset.bindings.pop(item.row())
+            self.removeRow(item.row(), parent.index())
+        self.save()
 
     def save(self) -> None:
         with open(self._path, 'w') as config:
