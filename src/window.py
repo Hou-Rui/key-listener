@@ -64,14 +64,14 @@ class MainWindow(QMainWindow):
             if current := self._selectedItem():
                 if current.data(ConfigModel.BindingRole):
                     current = current.parent()
-                index = self._model.addBinding(Binding.sample(), current)
+                index = self._model.addBinding(Binding(), current)
                 self._selectionModel.select(
                     index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
                 self._treeView.expand(index.parent())
 
         @self._actionAddPreset.triggered.connect
         def _():
-            index = self._model.addPreset(Preset.sample())
+            index = self._model.addPreset(Preset())
             self._selectionModel.select(
                 index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 

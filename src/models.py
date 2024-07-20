@@ -12,28 +12,18 @@ import utils
 
 @dataclass
 class Binding:
-    desc: str
-    key: str
-    event: str
-    useShell: bool
-    cmd: str
-
-    @classmethod
-    def sample(cls):
-        return cls(desc='New Binding', key='', event='pressed',
-                   useShell=True, cmd='')
+    desc: str = 'New Binding'
+    key: str = 'KEY_ENTER'
+    event: str = 'pressed'
+    useShell: bool = True
+    cmd: str = ''
 
 
 @dataclass
 class Preset:
-    desc: str
-    shell: str
-    bindings: list[Binding]
-
-    @classmethod
-    def sample(cls):
-        return cls(desc='New Preset', shell='/bin/sh',
-                   bindings=[Binding.sample()])
+    desc: str = 'New Preset'
+    shell: str = '/bin/sh'
+    bindings: list[Binding] = [Binding()]
 
     def getBindings(self, key: str, event: str) -> list[Binding]:
         return [b for b in self.bindings
