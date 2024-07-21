@@ -1,3 +1,4 @@
+from typing import Callable
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QFormLayout, QLabel, QLineEdit, QSizePolicy,
@@ -20,13 +21,10 @@ class SettingsForm(QWidget):
         layout.addSpacerItem(self._createSpaceItem())
         layout.addWidget(self._createFooter())
 
-    def addRow[T: QWidget](self, text: str,
-                           type: type[T] = QLineEdit) -> T:
+    def addRow(self, text: str, field: QWidget) -> None:
         if not self._currentForm:
             self._currentForm = QFormLayout()
-        field = type()
         self._currentForm.addRow(text, field)
-        return field
 
     def end(self) -> None:
         if self._currentForm:
@@ -60,8 +58,13 @@ class PresetSettingsForm(SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.addHeader(self.tr("Preset Settings"))
-        self._descField = self.addRow(self.tr("Description:"))
-        self._shellField = self.addRow(self.tr("Shell:"))
+
+        self._descField = QLineEdit()
+        self.addRow(self.tr("Description:"), self._descField)
+
+        self._shellField = QLineEdit()
+        self.addRow(self.tr("Shell:"), self._shellField)
+
         self.end()
 
     def desc(self) -> str:
@@ -81,12 +84,23 @@ class BindingSettingsForm(SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.addHeader(self.tr("Binding Settings"))
-        self._descField = self.addRow(self.tr("Description:"))
-        self._keyField = self.addRow(self.tr("Key:"))
-        self._eventField = self.addRow(self.tr("event:"), QComboBox)
+
+        self._descField = QLineEdit()
+        self.addRow(self.tr("Description:"), self._descField)
+
+        self._keyField = QLineEdit()
+        self.addRow(self.tr("Key:"), self._keyField)
+
+        self._eventField = QComboBox()
         self._eventField.addItems((self.tr("pressed"), self.tr("released")))
-        self._useShellField = self.addRow(self.tr("Use Shell:"), QCheckBox)
-        self._cmdField = self.addRow(self.tr("Command:"), QTextEdit)
+        self.addRow(self.tr("event:"), self._eventField)
+
+        self._useShellField = QCheckBox()
+        self.addRow(self.tr("Use Shell:"), self._useShellField)
+
+        self._cmdField = QTextEdit()
+        self.addRow(self.tr("Command:"), self._cmdField)
+
         self.end()
 
     def desc(self) -> str:
