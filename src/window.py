@@ -2,8 +2,8 @@ from typing import override
 
 from PySide6.QtCore import QItemSelection, QItemSelectionModel, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QIcon, QStandardItem
-from PySide6.QtWidgets import (QDockWidget, QMainWindow, QSizePolicy,
-                               QStackedWidget, QTreeView, QWidget)
+from PySide6.QtWidgets import (QDockWidget, QMainWindow, QMessageBox,
+                               QSizePolicy, QStackedWidget, QTreeView, QWidget)
 
 from executor import Executor
 from forms import BindingSettingsForm, PresetSettingsForm
@@ -78,8 +78,14 @@ class MainWindow(QMainWindow):
         @self._actionRemove.triggered.connect
         def _():
             if current := self._selectedItem():
-                self._model.removeItem(current)
-                self._selectionModel.clear()
+                Button = QMessageBox.StandardButton
+                answer = QMessageBox.warning(
+                    self, self.tr("Remove Selected"),
+                    self.tr("Are you sure to remove selected item?"),
+                    buttons=Button.Yes | Button.No)
+                if answer == Button.Yes:
+                    self._model.removeItem(current)
+                    self._selectionModel.clear()
 
         @self._listener.listeningChanged.connect
         def _():
