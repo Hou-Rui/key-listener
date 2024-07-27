@@ -1,6 +1,15 @@
-PROJECT_CODE_NAME = 'keylistener'
-PROJECT_DISPLAY_NAME = 'Key Listener'
+from PySide6.QtWidgets import QApplication
 
-MAIN_WINDOW_WIDTH_MIN = 750
-MAIN_WINDOW_HEIGHT_MIN = 550
-ROW_HEIGHT = 30
+
+def getDisplayName() -> str:
+    app = QApplication.instance()
+    assert app is not None
+    return app.tr('Key Listener')
+
+
+def getCodeName() -> str:
+    return 'keylistener'
+
+
+def preferredRowHeight() -> int:
+    return 30

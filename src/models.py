@@ -1,13 +1,13 @@
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, override
+from typing import Any, TypeVar, override
 
 from PySide6.QtCore import (QByteArray, QModelIndex, QObject, QSize,
                             QStandardPaths, Qt)
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 
-import utils
+PROJECT_CODE_NAME = 'keylistener'
 
 
 @dataclass
@@ -31,6 +31,7 @@ class Preset:
 
 
 class ConfigModel(QStandardItemModel):
+    Data = TypeVar('Data', bound=Preset | Binding)
     PresetRole = Qt.ItemDataRole.UserRole
     BindingRole = Qt.ItemDataRole.UserRole + 1
 
@@ -40,8 +41,8 @@ class ConfigModel(QStandardItemModel):
         self._setupModel()
 
     def _initPath(self) -> str:
-        path = Path(QStandardPaths.writableLocation(
-            QStandardPaths.StandardLocation.ConfigLocation), 'keylistener')
+        loc = QStandardPaths.StandardLocation.ConfigLocation
+        path = Path(QStandardPaths.writableLocation(loc), PROJECT_CODE_NAME)
         path.mkdir(exist_ok=True)
         file = path / 'config.json'
         if not file.exists():
@@ -62,6 +63,21 @@ class ConfigModel(QStandardItemModel):
                     presetItem.appendRow(bindingItem)
                 root.appendRow(presetItem)
 
+    def _itemTypeData(self, item: QModelIndex | QStandardItem,
+                      t: type[Data], role: int) -> Data | None:
+        if isinstance(item, QStandardItem):
+            item = item.index()
+        data = self.itemData(item).get(role)
+        if isinstance(data, t):
+            return data
+        return None
+
+    def itemPresetData(self, item: QModelIndex | QStandardItem) -> Preset | None:
+        return self._itemTypeData(item, Preset, self.PresetRole)
+
+    def itemBindingData(self, item: QModelIndex | QStandardItem) -> Binding | None:
+        return self._itemTypeData(item, Binding, self.BindingRole)
+
     @override
     def data(self, index: QModelIndex, role: int) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -71,8 +87,6 @@ class ConfigModel(QStandardItemModel):
                     assert isinstance(data, (Binding, Preset))
                     return data.desc
             return None
-        if role == Qt.ItemDataRole.SizeHintRole:
-            return QSize(0, utils.ROW_HEIGHT)
         return super().data(index, role)
 
     @override

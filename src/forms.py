@@ -1,13 +1,15 @@
-from typing import Callable
+from typing import Callable, TypeVar
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QFormLayout, QLabel, QLineEdit, QSizePolicy,
                                QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 
-from utils import ROW_HEIGHT
+from utils import preferredRowHeight
 
 
 class SettingsForm(QWidget):
+    Widget = TypeVar('Widget', bound=QWidget)
     applyRequested = Signal()
     resetRequested = Signal()
 
@@ -21,10 +23,13 @@ class SettingsForm(QWidget):
         layout.addSpacerItem(self._createSpaceItem())
         layout.addWidget(self._createFooter())
 
-    def addRow(self, text: str, field: QWidget) -> None:
+    def addRow(self, text: str,
+               factory: Callable[[], Widget] = QLineEdit) -> Widget:
         if not self._currentForm:
             self._currentForm = QFormLayout()
+        field = factory()
         self._currentForm.addRow(text, field)
+        return field
 
     def end(self) -> None:
         if self._currentForm:
@@ -34,7 +39,7 @@ class SettingsForm(QWidget):
     def addHeader(self, title: str) -> QLabel:
         self.end()
         label = QLabel(f'<center><b>{title}</b></center>')
-        label.setFixedHeight(ROW_HEIGHT)
+        label.setFixedHeight(preferredRowHeight())
         self._formLayout.addWidget(label)
         return label
 
@@ -58,13 +63,8 @@ class PresetSettingsForm(SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.addHeader(self.tr("Preset Settings"))
-
-        self._descField = QLineEdit()
-        self.addRow(self.tr("Description:"), self._descField)
-
-        self._shellField = QLineEdit()
-        self.addRow(self.tr("Shell:"), self._shellField)
-
+        self._descField = self.addRow(self.tr("Description:"))
+        self._shellField = self.addRow(self.tr("Shell:"))
         self.end()
 
     def desc(self) -> str:
@@ -84,23 +84,12 @@ class BindingSettingsForm(SettingsForm):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.addHeader(self.tr("Binding Settings"))
-
-        self._descField = QLineEdit()
-        self.addRow(self.tr("Description:"), self._descField)
-
-        self._keyField = QLineEdit()
-        self.addRow(self.tr("Key:"), self._keyField)
-
-        self._eventField = QComboBox()
-        self._eventField.addItems((self.tr("pressed"), self.tr("released")))
-        self.addRow(self.tr("event:"), self._eventField)
-
-        self._useShellField = QCheckBox()
-        self.addRow(self.tr("Use Shell:"), self._useShellField)
-
-        self._cmdField = QTextEdit()
-        self.addRow(self.tr("Command:"), self._cmdField)
-
+        self._descField = self.addRow(self.tr("Description:"))
+        self._keyField = self.addRow(self.tr("Key:"))
+        self._eventField = self.addRow(self.tr("Event:"), QComboBox)
+        self._eventField.addItems((self.tr("Pressed"), self.tr("Released")))
+        self._useShellField = self.addRow(self.tr("Use Shell:"), QCheckBox)
+        self._cmdField = self.addRow(self.tr("Command:"), QTextEdit)
         self.end()
 
     def desc(self) -> str:
@@ -116,14 +105,16 @@ class BindingSettingsForm(SettingsForm):
         self._keyField.setText(key)
 
     def keyEvent(self) -> str:
-        return self._eventField.currentText()
+        return {
+            0: 'pressed',
+            1: 'released',
+        }[self._eventField.currentIndex()]
 
     def setKeyEvent(self, event: str) -> None:
-        indexes = {
+        self._eventField.setCurrentIndex({
             'pressed': 0,
             'released': 1,
-        }
-        self._eventField.setCurrentIndex(indexes[event])
+        }[event])
 
     def useShell(self) -> bool:
         return self._useShellField.isChecked()

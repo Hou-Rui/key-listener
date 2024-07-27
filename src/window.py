@@ -9,8 +9,10 @@ from executor import Executor
 from forms import BindingSettingsForm, PresetSettingsForm
 from listener import EventListener
 from models import Binding, ConfigModel, Preset
-from utils import (MAIN_WINDOW_HEIGHT_MIN, MAIN_WINDOW_WIDTH_MIN,
-                   PROJECT_DISPLAY_NAME)
+from utils import getDisplayName, preferredRowHeight
+
+MAIN_WINDOW_WIDTH_MIN = 750
+MAIN_WINDOW_HEIGHT_MIN = 550
 
 
 class MainWindow(QMainWindow):
@@ -38,7 +40,7 @@ class MainWindow(QMainWindow):
 
     def _initWindow(self) -> None:
         self.setMinimumSize(MAIN_WINDOW_WIDTH_MIN, MAIN_WINDOW_HEIGHT_MIN)
-        self.setWindowTitle(self.tr(PROJECT_DISPLAY_NAME))
+        self.setWindowTitle(getDisplayName())
 
     def _initActions(self) -> None:
         # actions
@@ -128,6 +130,8 @@ class MainWindow(QMainWindow):
         self._treeView = QTreeView()
         self._treeView.setHeaderHidden(True)
         self._treeView.setUniformRowHeights(True)
+        self._treeView.setStyleSheet(
+            f"QTreeView::item {{ height: {preferredRowHeight()}px; }}")
         self._treeView.setSelectionMode(
             QTreeView.SelectionMode.SingleSelection)
         self._treeView.setEditTriggers(QTreeView.EditTrigger.NoEditTriggers)
