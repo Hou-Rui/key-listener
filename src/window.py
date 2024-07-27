@@ -229,14 +229,11 @@ class MainWindow(QMainWindow):
             if not hasSelection:
                 self._stackedWidget.setCurrentWidget(placeholderForm)
                 return
-
-            preset: Preset | None
-            binding: Binding | None
-            if preset := item.data(ConfigModel.PresetRole):
+            if preset := self._model.itemPresetData(item):
                 presetForm.setDesc(preset.desc)
                 presetForm.setShell(preset.shell)
                 self._stackedWidget.setCurrentWidget(presetForm)
-            elif binding := item.data(ConfigModel.BindingRole):
+            elif binding := self._model.itemBindingData(item):
                 bindingForm.setDesc(binding.desc)
                 bindingForm.setKey(binding.key)
                 bindingForm.setKeyEvent(binding.event)

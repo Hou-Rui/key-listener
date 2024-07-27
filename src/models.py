@@ -32,8 +32,8 @@ class Preset:
 
 class ConfigModel(QStandardItemModel):
     Data = TypeVar('Data', bound=Preset | Binding)
-    PresetRole = Qt.ItemDataRole.UserRole
-    BindingRole = Qt.ItemDataRole.UserRole + 1
+    PresetRole = Qt.ItemDataRole.UserRole + 1
+    BindingRole = Qt.ItemDataRole.UserRole + 2
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -107,22 +107,25 @@ class ConfigModel(QStandardItemModel):
         item = QStandardItem()
         item.setData(binding, self.BindingRole)
         parent.appendRow(item)
-        preset: Preset = parent.data(self.PresetRole)
-        preset.bindings.append(binding)
+        if preset := self.itemPresetData(parent):
+            preset.bindings.append(binding)
         return item.index()
 
     def removeItem(self, item: QStandardItem) -> None:
-        if item.data(ConfigModel.PresetRole):
+        if self.itemPresetData(item):
             self.removeRow(item.row())
         else:
             parent = item.parent()
-            preset: Preset = parent.data(ConfigModel.PresetRole)
-            preset.bindings.pop(item.row())
-            self.removeRow(item.row(), parent.index())
+            if preset := self.itemPresetData(parent):
+                preset.bindings.pop(item.row())
+                self.removeRow(item.row(), parent.index())
         self.save()
 
     def save(self) -> None:
         with open(self._path, 'w') as config:
-            raw = [asdict(self.item(row).data(self.PresetRole))
-                   for row in range(self.rowCount())]
+            raw: list[dict[str, Any]] = []
+            for row in range(self.rowCount()):
+                item = self.item(row)
+                if preset := self.itemPresetData(item):
+                    raw.append(asdict(preset))
             json.dump(raw, config, indent=2)
