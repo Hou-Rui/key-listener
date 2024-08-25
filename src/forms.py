@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import SIGNAL, Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QFormLayout, QLabel, QLineEdit, QSizePolicy,
                                QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
@@ -12,22 +12,27 @@ class SettingsForm(QWidget):
     Widget = TypeVar('Widget', bound=QWidget)
     applyRequested = Signal()
     resetRequested = Signal()
+    dirtyChanged = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self._formLayout = QVBoxLayout()
         self._currentForm: QFormLayout | None = None
+        self._isDirty: bool = False
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(self._formLayout)
         layout.addSpacerItem(self._createSpaceItem())
         layout.addWidget(self._createFooter())
 
     def addRow(self, text: str,
-               factory: Callable[[], Widget] = QLineEdit) -> Widget:
+               factory: Callable[[], Widget] = QLineEdit,
+               dirtySignal: Signal = QLineEdit.editingFinished) -> Widget:
         if not self._currentForm:
             self._currentForm = QFormLayout()
         field = factory()
+        field.connect(SIGNAL(str(dirtySignal)),  # type: ignore reportArgumentType
+                      lambda: self.setDirty(True))
         self._currentForm.addRow(text, field)
         return field
 
@@ -35,6 +40,7 @@ class SettingsForm(QWidget):
         if self._currentForm:
             self._formLayout.addLayout(self._currentForm)
             self._currentForm = None
+        self.setDirty(False)
 
     def addHeader(self, title: str) -> QLabel:
         self.end()
@@ -42,6 +48,14 @@ class SettingsForm(QWidget):
         label.setFixedHeight(preferredRowHeight())
         self._formLayout.addWidget(label)
         return label
+
+    def isDirty(self) -> bool:
+        return self._isDirty
+
+    def setDirty(self, dirty: bool) -> None:
+        if self._isDirty != dirty:
+            self._isDirty = dirty
+            self.dirtyChanged.emit()
 
     def _createSpaceItem(self) -> QSpacerItem:
         policy = QSizePolicy.Policy.Expanding
@@ -52,10 +66,14 @@ class SettingsForm(QWidget):
             QDialogButtonBox.StandardButton.Apply |
             QDialogButtonBox.StandardButton.Reset |
             QDialogButtonBox.StandardButton.Help)
-        footer.button(footer.StandardButton.Apply).clicked.connect(
-            self.applyRequested.emit)
-        footer.button(footer.StandardButton.Reset).clicked.connect(
-            self.resetRequested.emit)
+        apply = footer.button(footer.StandardButton.Apply)
+        reset = footer.button(footer.StandardButton.Reset)
+        apply.clicked.connect(self.applyRequested.emit)
+        reset.clicked.connect(self.resetRequested.emit)
+        self.dirtyChanged.connect(
+            lambda: apply.setDisabled(not self.isDirty()))
+        self.dirtyChanged.connect(lambda: reset.setDisabled(self.isDirty()))
+        self.dirtyChanged.emit()
         return footer
 
 
@@ -86,23 +104,20 @@ class BindingSettingsForm(SettingsForm):
         self.addHeader(self.tr("Binding Settings"))
         self._descField = self.addRow(self.tr("Description:"))
         self._keyField = self.addRow(self.tr("Key:"))
-        self._eventField = self.addRow(self.tr("Event:"), QComboBox)
+        self._eventField = self.addRow(
+            self.tr("Event:"), QComboBox, QComboBox.currentIndexChanged)
         self._eventField.addItems((self.tr("Pressed"), self.tr("Released")))
-        self._useShellField = self.addRow(self.tr("Use Shell:"), QCheckBox)
-        self._cmdField = self.addRow(self.tr("Command:"), QTextEdit)
+        self._useShellField = self.addRow(
+            self.tr("Use Shell:"), QCheckBox, QCheckBox.toggled)
+        self._cmdField = self.addRow(
+            self.tr("Command:"), QTextEdit, QTextEdit.textChanged)
         self.end()
 
     def desc(self) -> str:
         return self._descField.text()
 
-    def setDesc(self, desc: str) -> None:
-        self._descField.setText(desc)
-
     def key(self) -> str:
         return self._keyField.text()
-
-    def setKey(self, key: str) -> None:
-        self._keyField.setText(key)
 
     def keyEvent(self) -> str:
         return {
@@ -110,20 +125,26 @@ class BindingSettingsForm(SettingsForm):
             1: 'released',
         }[self._eventField.currentIndex()]
 
+    def useShell(self) -> bool:
+        return self._useShellField.isChecked()
+
+    def cmd(self) -> str:
+        return self._cmdField.toPlainText()
+
+    def setDesc(self, desc: str) -> None:
+        self._descField.setText(desc)
+
+    def setKey(self, key: str) -> None:
+        self._keyField.setText(key)
+
     def setKeyEvent(self, event: str) -> None:
         self._eventField.setCurrentIndex({
             'pressed': 0,
             'released': 1,
         }[event])
 
-    def useShell(self) -> bool:
-        return self._useShellField.isChecked()
-
     def setUseShell(self, useShell: bool) -> None:
         self._useShellField.setChecked(useShell)
-
-    def cmd(self) -> str:
-        return self._cmdField.toPlainText()
 
     def setCmd(self, cmd: str) -> None:
         self._cmdField.setText(cmd)

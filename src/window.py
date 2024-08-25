@@ -190,12 +190,14 @@ class MainWindow(QMainWindow):
                 index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
+                presetForm.setDirty(False)
 
         @presetForm.resetRequested.connect
         def _():
             if preset := self._selectedPreset():
                 presetForm.setDesc(preset.desc)
                 presetForm.setShell(preset.shell)
+                presetForm.setDirty(False)
 
         @bindingForm.applyRequested.connect
         def _():
@@ -208,6 +210,7 @@ class MainWindow(QMainWindow):
                 index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
+                bindingForm.setDirty(False)
 
         @bindingForm.resetRequested.connect
         def _():
@@ -217,6 +220,7 @@ class MainWindow(QMainWindow):
                 bindingForm.setKeyEvent(binding.event)
                 bindingForm.setCmd(binding.cmd)
                 bindingForm.setUseShell(binding.useShell)
+                bindingForm.setDirty(False)
 
         @self._selectionModel.selectionChanged.connect
         def _(selected: QItemSelection, _):
@@ -232,6 +236,7 @@ class MainWindow(QMainWindow):
             if preset := self._model.itemPresetData(item):
                 presetForm.setDesc(preset.desc)
                 presetForm.setShell(preset.shell)
+                presetForm.setDirty(False)
                 self._stackedWidget.setCurrentWidget(presetForm)
             elif binding := self._model.itemBindingData(item):
                 bindingForm.setDesc(binding.desc)
@@ -239,6 +244,7 @@ class MainWindow(QMainWindow):
                 bindingForm.setKeyEvent(binding.event)
                 bindingForm.setUseShell(binding.useShell)
                 bindingForm.setCmd(binding.cmd)
+                bindingForm.setDirty(False)
                 self._stackedWidget.setCurrentWidget(bindingForm)
 
     def _setEditable(self, editable: bool) -> None:
