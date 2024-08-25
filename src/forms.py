@@ -2,8 +2,9 @@ from typing import Callable, TypeVar
 
 from PySide6.QtCore import SIGNAL, Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
-                               QFormLayout, QLabel, QLineEdit, QSizePolicy,
-                               QSpacerItem, QTextEdit, QVBoxLayout, QWidget, QMessageBox)
+                               QFormLayout, QLabel, QLineEdit, QMessageBox,
+                               QSizePolicy, QSpacerItem, QTextEdit,
+                               QVBoxLayout, QWidget)
 
 from utils import preferredRowHeight
 
