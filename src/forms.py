@@ -3,7 +3,7 @@ from typing import Callable, TypeVar
 from PySide6.QtCore import SIGNAL, Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QFormLayout, QLabel, QLineEdit, QSizePolicy,
-                               QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
+                               QSpacerItem, QTextEdit, QVBoxLayout, QWidget, QMessageBox)
 
 from utils import preferredRowHeight
 
@@ -57,6 +57,23 @@ class SettingsForm(QWidget):
             self._isDirty = dirty
             self.dirtyChanged.emit()
 
+    def checkDirty(self) -> bool:
+        if not self.isDirty():
+            return True
+        button = QMessageBox.warning(
+            self, self.tr("Save Changes?"),
+            self.tr("Do you want to save or discard your changes?"),
+            QMessageBox.StandardButton.Save |
+            QMessageBox.StandardButton.Discard |
+            QMessageBox.StandardButton.Cancel)
+        if button == QMessageBox.StandardButton.Save:
+            self.applyRequested.emit()
+            return True
+        elif button == QMessageBox.StandardButton.Discard:
+            self.resetRequested.emit()
+            return True
+        return False
+
     def _createSpaceItem(self) -> QSpacerItem:
         policy = QSizePolicy.Policy.Expanding
         return QSpacerItem(0, 0, policy, policy)
@@ -72,7 +89,8 @@ class SettingsForm(QWidget):
         reset.clicked.connect(self.resetRequested.emit)
         self.dirtyChanged.connect(
             lambda: apply.setDisabled(not self.isDirty()))
-        self.dirtyChanged.connect(lambda: reset.setDisabled(self.isDirty()))
+        self.dirtyChanged.connect(
+            lambda: reset.setDisabled(self.isDirty()))
         self.dirtyChanged.emit()
         return footer
 

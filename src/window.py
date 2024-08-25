@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QDockWidget, QMainWindow, QMessageBox,
                                QSizePolicy, QStackedWidget, QTreeView, QWidget)
 
 from executor import Executor
-from forms import BindingSettingsForm, PresetSettingsForm
+from forms import BindingSettingsForm, PresetSettingsForm, SettingsForm
 from listener import EventListener
 from models import Binding, ConfigModel, Preset
 from utils import getDisplayName, preferredRowHeight
@@ -181,6 +181,8 @@ class MainWindow(QMainWindow):
         self._stackedWidget.addWidget(placeholderForm)
         self._stackedWidget.setCurrentWidget(placeholderForm)
 
+        _deselecting = False
+
         # connections
         @presetForm.applyRequested.connect
         def _():
@@ -223,7 +225,18 @@ class MainWindow(QMainWindow):
                 bindingForm.setDirty(False)
 
         @self._selectionModel.selectionChanged.connect
-        def _(selected: QItemSelection, _):
+        def _(selected: QItemSelection, deselected: QItemSelection):
+            nonlocal _deselecting
+            if _deselecting:
+                _deselecting = False
+                return
+            if currentForm := self._currentSettingForm():
+                if not currentForm.checkDirty() and not deselected.empty():
+                    _deselecting = True
+                    self._selectionModel.select(
+                        deselected, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+                    return
+
             item = self._selectedItem(selected)
             hasSelection = item is not None
             self._actionAddBinding.setEnabled(hasSelection)
@@ -246,6 +259,12 @@ class MainWindow(QMainWindow):
                 bindingForm.setCmd(binding.cmd)
                 bindingForm.setDirty(False)
                 self._stackedWidget.setCurrentWidget(bindingForm)
+
+    def _currentSettingForm(self) -> SettingsForm | None:
+        current = self._stackedWidget.currentWidget()
+        if isinstance(current, SettingsForm):
+            return current
+        return None
 
     def _setEditable(self, editable: bool) -> None:
         self._treeView.setEnabled(editable)
