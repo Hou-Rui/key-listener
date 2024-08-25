@@ -27,7 +27,7 @@ class SettingsForm(QWidget):
 
     def addRow(self, text: str,
                factory: Callable[[], Widget] = QLineEdit,
-               dirtySignal: Signal = QLineEdit.editingFinished) -> Widget:
+               dirtySignal: Signal = QLineEdit.textChanged) -> Widget:
         if not self._currentForm:
             self._currentForm = QFormLayout()
         field = factory()
@@ -57,7 +57,7 @@ class SettingsForm(QWidget):
             self._isDirty = dirty
             self.dirtyChanged.emit()
 
-    def checkDirty(self) -> bool:
+    def askSaveChanges(self) -> bool:
         if not self.isDirty():
             return True
         button = QMessageBox.warning(

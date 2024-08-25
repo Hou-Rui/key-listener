@@ -97,6 +97,9 @@ class MainWindow(QMainWindow):
 
         @self._actionStart.triggered.connect
         def _():
+            if currentForm := self._currentSettingForm():
+                if not currentForm.askSaveChanges():
+                    return
             if preset := self._selectedPreset():
                 keys = [(b.key, b.event) for b in preset.bindings]
                 self._executor.start(preset.shell)
@@ -231,7 +234,7 @@ class MainWindow(QMainWindow):
                 _deselecting = False
                 return
             if currentForm := self._currentSettingForm():
-                if not currentForm.checkDirty() and not deselected.empty():
+                if not currentForm.askSaveChanges() and not deselected.empty():
                     _deselecting = True
                     self._selectionModel.select(
                         deselected, QItemSelectionModel.SelectionFlag.ClearAndSelect)
