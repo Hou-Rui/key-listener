@@ -190,42 +190,28 @@ class MainWindow(QMainWindow):
         @presetForm.applyRequested.connect
         def _():
             if preset := self._selectedPreset():
-                preset.desc = presetForm.desc()
-                preset.shell = presetForm.shell()
+                presetForm.export(preset)
                 index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
-                presetForm.setDirty(False)
 
         @presetForm.resetRequested.connect
         def _():
             if preset := self._selectedPreset():
-                presetForm.setDesc(preset.desc)
-                presetForm.setShell(preset.shell)
-                presetForm.setDirty(False)
+                presetForm.load(preset)
 
         @bindingForm.applyRequested.connect
         def _():
             if binding := self._selectedBinding():
-                binding.desc = bindingForm.desc()
-                binding.key = bindingForm.key()
-                binding.event = bindingForm.keyEvent()
-                binding.cmd = bindingForm.cmd()
-                binding.useShell = bindingForm.useShell()
+                bindingForm.export(binding)
                 index = self._selectedItem()
                 self._model.dataChanged.emit(index, index)
                 self._model.save()
-                bindingForm.setDirty(False)
 
         @bindingForm.resetRequested.connect
         def _():
             if binding := self._selectedBinding():
-                bindingForm.setDesc(binding.desc)
-                bindingForm.setKey(binding.key)
-                bindingForm.setKeyEvent(binding.event)
-                bindingForm.setCmd(binding.cmd)
-                bindingForm.setUseShell(binding.useShell)
-                bindingForm.setDirty(False)
+                bindingForm.load(binding)
 
         @self._selectionModel.selectionChanged.connect
         def _(selected: QItemSelection, deselected: QItemSelection):
@@ -250,17 +236,10 @@ class MainWindow(QMainWindow):
                 self._stackedWidget.setCurrentWidget(placeholderForm)
                 return
             if preset := self._model.itemPresetData(item):
-                presetForm.setDesc(preset.desc)
-                presetForm.setShell(preset.shell)
-                presetForm.setDirty(False)
+                presetForm.load(preset)
                 self._stackedWidget.setCurrentWidget(presetForm)
             elif binding := self._model.itemBindingData(item):
-                bindingForm.setDesc(binding.desc)
-                bindingForm.setKey(binding.key)
-                bindingForm.setKeyEvent(binding.event)
-                bindingForm.setUseShell(binding.useShell)
-                bindingForm.setCmd(binding.cmd)
-                bindingForm.setDirty(False)
+                bindingForm.load(binding)
                 self._stackedWidget.setCurrentWidget(bindingForm)
 
     def _currentSettingForm(self) -> SettingsForm | None:

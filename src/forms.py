@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QSizePolicy, QSpacerItem, QTextEdit,
                                QVBoxLayout, QWidget)
 
+from models import Binding, Preset
 from utils import preferredRowHeight
 
 
@@ -28,11 +29,11 @@ class SettingsForm(QWidget):
 
     def addRow(self, text: str,
                factory: Callable[[], Widget] = QLineEdit,
-               dirtySignal: Signal = QLineEdit.textChanged) -> Widget:
+               dirty: Signal = QLineEdit.textChanged) -> Widget:
         if not self._currentForm:
             self._currentForm = QFormLayout()
         field = factory()
-        field.connect(SIGNAL(str(dirtySignal)),  # type: ignore reportArgumentType
+        field.connect(SIGNAL(str(dirty)),  # type: ignore reportArgumentType
                       lambda: self.setDirty(True))
         self._currentForm.addRow(text, field)
         return field
@@ -104,17 +105,15 @@ class PresetSettingsForm(SettingsForm):
         self._shellField = self.addRow(self.tr("Shell:"))
         self.end()
 
-    def desc(self) -> str:
-        return self._descField.text()
+    def export(self, target: Preset):
+        target.desc = self._descField.text()
+        target.shell = self._shellField.text()
+        self.setDirty(False)
 
-    def shell(self) -> str:
-        return self._shellField.text()
-
-    def setDesc(self, desc: str) -> None:
-        self._descField.setText(desc)
-
-    def setShell(self, shell: str) -> None:
-        self._shellField.setText(shell)
+    def load(self, preset: Preset) -> None:
+        self._descField.setText(preset.desc)
+        self._shellField.setText(preset.shell)
+        self.setDirty(False)
 
 
 class BindingSettingsForm(SettingsForm):
@@ -124,46 +123,32 @@ class BindingSettingsForm(SettingsForm):
         self._descField = self.addRow(self.tr("Description:"))
         self._keyField = self.addRow(self.tr("Key:"))
         self._eventField = self.addRow(
-            self.tr("Event:"), QComboBox, QComboBox.currentIndexChanged)
+            self.tr("Event:"), QComboBox, dirty=QComboBox.currentIndexChanged)
         self._eventField.addItems((self.tr("Pressed"), self.tr("Released")))
         self._useShellField = self.addRow(
-            self.tr("Use Shell:"), QCheckBox, QCheckBox.toggled)
+            self.tr("Use Shell:"), QCheckBox, dirty=QCheckBox.toggled)
         self._cmdField = self.addRow(
-            self.tr("Command:"), QTextEdit, QTextEdit.textChanged)
+            self.tr("Command:"), QTextEdit, dirty=QTextEdit.textChanged)
         self.end()
 
-    def desc(self) -> str:
-        return self._descField.text()
-
-    def key(self) -> str:
-        return self._keyField.text()
-
-    def keyEvent(self) -> str:
-        return {
+    def export(self, target: Binding) -> None:
+        target.desc = self._descField.text()
+        target.key = self._keyField.text()
+        target.useShell = self._useShellField.isChecked()
+        target.cmd = self._cmdField.toPlainText()
+        target.event = {
             0: 'pressed',
             1: 'released',
         }[self._eventField.currentIndex()]
+        self.setDirty(False)
 
-    def useShell(self) -> bool:
-        return self._useShellField.isChecked()
-
-    def cmd(self) -> str:
-        return self._cmdField.toPlainText()
-
-    def setDesc(self, desc: str) -> None:
-        self._descField.setText(desc)
-
-    def setKey(self, key: str) -> None:
-        self._keyField.setText(key)
-
-    def setKeyEvent(self, event: str) -> None:
+    def load(self, binding: Binding) -> None:
+        self._descField.setText(binding.desc)
+        self._keyField.setText(binding.key)
+        self._useShellField.setChecked(binding.useShell)
+        self._cmdField.setText(binding.cmd)
         self._eventField.setCurrentIndex({
             'pressed': 0,
             'released': 1,
-        }[event])
-
-    def setUseShell(self, useShell: bool) -> None:
-        self._useShellField.setChecked(useShell)
-
-    def setCmd(self, cmd: str) -> None:
-        self._cmdField.setText(cmd)
+        }[binding.event])
+        self.setDirty(False)
