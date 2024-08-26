@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
 
         # dock widget
         dock = QDockWidget(self.tr('Preset List'))
+        dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         dock.setWidget(self._treeView)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
 
