@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
 
-from PySide6.QtCore import SIGNAL, Qt, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialogButtonBox,
                                QFormLayout, QLabel, QLineEdit, QMessageBox,
                                QSizePolicy, QSpacerItem, QTextEdit,
@@ -33,8 +33,7 @@ class SettingsForm(QWidget):
         if not self._currentForm:
             self._currentForm = QFormLayout()
         field = factory()
-        field.connect(SIGNAL(str(dirty)),  # type: ignore reportArgumentType
-                      lambda: self.setDirty(True))
+        dirty.__get__(field, None).connect(lambda: self.setDirty(True))
         self._currentForm.addRow(text, field)
         return field
 
